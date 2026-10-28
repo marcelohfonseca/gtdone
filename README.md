@@ -1,56 +1,29 @@
-# sv
+# GTDone
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+GTD task and project management app. The server stores data in SQLite and is intended to run on a privately owned machine, accessed through a VPN.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Development
 
 ```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@1.1.1 create --template minimal --types ts --install npm .
-```
-
-## Adding features
-
-Add features to your project with `sv add`:
-
-```sh
-npx sv add
-```
-
-For example, to add Tailwind CSS:
-
-```sh
-npx sv add tailwindcss
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+The default SQLite file is `data/gtdone.db`. Override its location with `GTDONE_DB_PATH`.
 
-To create a production version of your app:
+## Production
+
+The app uses SvelteKit's Node adapter. Build and start it with:
 
 ```sh
 npm run build
+npm start
 ```
 
-You can preview the production build with `npm run preview`.
+The backup scheduler creates a SQLite backup when the server starts and every 24 hours while it is running. By default it stores the latest seven backups in `data/backups` next to the database.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- `GTDONE_DB_PATH`: SQLite database file path; defaults to `data/gtdone.db`.
+- `GTDONE_BACKUP_DIR`: backup directory; defaults to `backups` beside the database.
+- `GTDONE_BACKUP_KEEP`: number of backups to retain; defaults to `7`.
+
+Backups should be copied to storage outside the host machine as part of the deployment's disaster-recovery plan.

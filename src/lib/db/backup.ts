@@ -20,15 +20,16 @@ export function backupDatabase(db: DatabaseSync, options: BackupOptions): Backup
 	const now = options.now ?? (() => Date.now());
 
 	mkdirSync(backupDir, { recursive: true });
-	const timestamp = new Date(now()).toISOString().replace(/[:.]/g, '-');
+	const created = now();
+	const timestamp = new Date(created).toISOString().replace(/[:.]/g, '-');
 	const finalPath = join(backupDir, `gtdone-${timestamp}.db`);
 	const tmpPath = join(backupDir, `.tmp-${timestamp}.db`);
 
-	db.exec(`VACUUM INTO '${tmpPath}'`);
+	db.exec(`VACUUM INTO '${tmpPath.replaceAll("'", "''")}'`);
 	renameSync(tmpPath, finalPath);
 
 	const removed = pruneOldBackups(backupDir, keep);
-	return { path: finalPath, created: now(), removed };
+	return { path: finalPath, created, removed };
 }
 
 export function verifyBackup(backupPath: string): boolean {
