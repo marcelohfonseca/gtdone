@@ -40,6 +40,16 @@
 			lang: prefs().lang
 		})
 	);
+	const startLabel = $derived.by(() => {
+		if (item.state !== 'scheduled' || item.startsAt == null) return '';
+		const sameYear = new Date(item.startsAt).getUTCFullYear() === new Date(today).getUTCFullYear();
+		const month = new Intl.DateTimeFormat(prefs().lang, { timeZone: 'UTC', month: 'short' })
+			.format(item.startsAt)
+			.replace('.', '');
+		const day = new Date(item.startsAt).getUTCDate();
+		const year = sameYear ? '' : ` ${new Date(item.startsAt).getUTCFullYear()}`;
+		return `${day} ${month.charAt(0).toUpperCase()}${month.slice(1)}${year}`;
+	});
 	const checkDone = $derived(item.checklist.filter((c) => c.done).length);
 
 	async function run(name: string, data: Record<string, string | number> = {}) {
@@ -66,7 +76,8 @@
 		<span class="badge" title={t('Referência')}>📎</span>
 	{/if}
 	<button class="title" onclick={() => (open = !open)}>
-		{#if item.contactName}<span class="contact">{item.contactName}:</span>{/if}
+		{#if startLabel}<span class="startdate" title={t('Data de início')}>{startLabel}</span>{/if}
+		{#if item.contactName}<span class="startdate" title={t('Contato')}>{item.contactName}</span>{/if}
 		{item.title}
 		{#if item.notes}<span class="muted" title={t('Tem notas')}> ✎</span>{/if}
 	</button>
@@ -130,6 +141,15 @@
 {/if}
 
 <style>
+	.startdate {
+		font-size: 0.75rem;
+		background: color-mix(in srgb, var(--accent) 18%, transparent);
+		color: var(--accent);
+		border-radius: 4px;
+		padding: 0.05rem 0.4rem;
+		margin-right: 0.3rem;
+		white-space: nowrap;
+	}
 	.row {
 		display: flex;
 		align-items: center;
@@ -158,10 +178,6 @@
 		padding: 0;
 		font: inherit;
 		cursor: pointer;
-	}
-	.contact {
-		color: var(--accent);
-		margin-right: 0.25rem;
 	}
 	.chip {
 		font-size: 0.75rem;
