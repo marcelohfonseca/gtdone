@@ -1,11 +1,27 @@
 // Lógica pura do Calendário (sem DOM/DB): intervalos de cada visão, navegação e agrupamento
 // por dia. Datas são meia-noite UTC em ms, como no restante do app.
 
-export const CAL_VIEWS = ['deadlines', '3days', 'week', 'month', 'next7'] as const;
+export const CAL_VIEWS = ['deadlines', '3days', 'next7', 'week', 'month', 'gantt'] as const;
 export type CalView = (typeof CAL_VIEWS)[number];
 export const DEFAULT_VIEW: CalView = 'week';
 
+export const CAL_MODES = ['both', 'planned', 'deadlines'] as const;
+export type CalMode = (typeof CAL_MODES)[number];
+
+export function parseMode(v: string | null | undefined): CalMode {
+	return (CAL_MODES as readonly string[]).includes(v ?? '') ? (v as CalMode) : 'both';
+}
+
 const DAY = 86_400_000;
+
+export type ScheduleBucket = 'thisWeek' | 'nextWeek' | 'future';
+
+// Agrupa uma data de início da lista Agendadas: esta semana, próxima semana ou datas futuras.
+export function scheduleBucket(startsAt: number, today: number, weekStart: 0 | 1): ScheduleBucket {
+	const thisWeekEnd = startOfWeek(today, weekStart) + 6 * DAY;
+	if (startsAt <= thisWeekEnd) return 'thisWeek';
+	return startsAt <= thisWeekEnd + 7 * DAY ? 'nextWeek' : 'future';
+}
 
 export type CalRange = {
 	view: CalView;
@@ -59,6 +75,13 @@ export function calendarRange(view: CalView, anchor: number, today: number, week
 			const days = range(today, 7);
 			return { ...base, anchor: today, from: days[0], to: days[6], days };
 		}
+		case 'gantt': {
+			const d = new Date(anchor);
+			const first = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+			const last = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0);
+			const days = range(first, (last - first) / DAY + 1);
+			return { ...base, from: first, to: last, days, month: { first, last } };
+		}
 		case 'month': {
 			const d = new Date(anchor);
 			const first = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
@@ -75,7 +98,7 @@ export function calendarRange(view: CalView, anchor: number, today: number, week
 export function shiftAnchor(view: CalView, anchor: number, dir: -1 | 1): number {
 	if (view === '3days') return anchor + dir * 3 * DAY;
 	if (view === 'week') return anchor + dir * 7 * DAY;
-	if (view === 'month') {
+	if (view === 'month' || view === 'gantt') {
 		const d = new Date(anchor);
 		return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + dir, 1);
 	}
@@ -92,7 +115,8 @@ export type CalEvent<T extends CalItem> = { item: T; date: number; kind: 'due' |
 export function buildEvents<T extends CalItem>(
 	items: T[],
 	r: CalRange,
-	today: number
+	today: number,
+	mode: CalMode = 'both'
 ): { byDay: Map<number, CalEvent<T>[]>; overdue: CalEvent<T>[] } {
 	const byDay = new Map<number, CalEvent<T>[]>();
 	const overdue: CalEvent<T>[] = [];
@@ -107,8 +131,10 @@ export function buildEvents<T extends CalItem>(
 		byDay.set(date, list);
 	};
 	for (const it of items) {
-		if (it.dueAt != null) push(it, it.dueAt, 'due');
-		if (it.startsAt != null && it.startsAt !== it.dueAt) push(it, it.startsAt, 'start');
+		if (mode !== 'planned' && it.dueAt != null) push(it, it.dueAt, 'due');
+		if (mode !== 'deadlines' && it.startsAt != null && (mode === 'planned' || it.startsAt !== it.dueAt)) {
+			push(it, it.startsAt, 'start');
+		}
 	}
 	overdue.sort((a, b) => a.date - b.date);
 	return { byDay, overdue };

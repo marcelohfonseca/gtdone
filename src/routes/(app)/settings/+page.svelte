@@ -67,6 +67,7 @@
 				{ key: 'reference', label: 'Referência', options: [['show', 'Mostrar'], ['hide', 'Ocultar']] },
 				{ key: 'later', label: 'Depois', options: [['on', 'Ativar'], ['off', 'Desativar']] },
 				{ key: 'waiting', label: 'Aguardando', options: [['on', 'Ativar'], ['off', 'Desativar']] },
+				{ key: 'calendar', label: 'Calendário', options: [['on', 'Ativar'], ['off', 'Desativar']] },
 				{ key: 'sequentialSidebar', label: 'Projetos sequenciais na barra', options: [['on', 'Mostrar'], ['off', 'Ocultar']] }
 			]
 		},

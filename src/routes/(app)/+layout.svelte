@@ -237,10 +237,12 @@
 				<hr />
 				{@render focusLink()}
 			{/if}
-			<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
-				<span class="icon">🗓️</span>
-				<span class="label">{t('Calendário')}</span>
-			</a>
+			{#if data.prefs.calendar === 'on'}
+				<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
+					<span class="icon">🗓️</span>
+					<span class="label">{t('Calendário')}</span>
+				</a>
+			{/if}
 			<h4><a class="h4link" href="/kanban">Kanban</a></h4>
 			{#each data.boards as b (b.id)}
 				<a href={`/kanban/${b.id}`} class:active={path === `/kanban/${b.id}`}>

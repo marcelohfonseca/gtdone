@@ -2,6 +2,7 @@
 	import { postAction } from '#lib/client/actions.ts';
 	import type { Item } from '#lib/gtd/items.ts';
 	import { LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
+	import { scheduleBucket } from '#lib/calendar.ts';
 	import ItemRow from './ItemRow.svelte';
 	import { copyText, itemsAsText } from '#lib/format.ts';
 	import { usePrefs, useT } from '#lib/prefs-context.ts';
@@ -24,7 +25,7 @@
 		areas: Named[];
 		contacts: Named[];
 		tags: Named[];
-		groupBy?: 'none' | 'project' | 'contact' | 'focus' | 'state';
+		groupBy?: 'none' | 'project' | 'contact' | 'focus' | 'state' | 'schedule';
 		// Em grupos de projeto, mostra só as primeiras N ações até o usuário expandir (0 = sem limite).
 		limitPerProject?: number;
 		emptyText: string;
@@ -42,6 +43,22 @@
 					title: st === 'completed' ? t('Concluídas') : st === 'next' ? t('Próximas ações') : t(LIST_META[st as 'inbox'].label),
 					href: null,
 					items: items.filter((i) => i.state === st)
+				}))
+				.filter((g) => g.items.length > 0);
+		}
+		if (groupBy === 'schedule') {
+			const weekStart = prefs().weekStart === 'sunday' ? 0 : 1;
+			const parts: [string, string][] = [
+				['thisWeek', t('Esta semana')],
+				['nextWeek', t('Próxima semana')],
+				['future', t('Datas futuras')]
+			];
+			return parts
+				.map(([key, title]) => ({
+					key,
+					title,
+					href: null,
+					items: items.filter((i) => scheduleBucket(i.startsAt ?? today, today, weekStart) === key)
 				}))
 				.filter((g) => g.items.length > 0);
 		}

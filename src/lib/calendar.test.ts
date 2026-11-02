@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { runMigrations } from '#lib/db/migrations.ts';
-import { captureItem, listCalendarItems } from '#lib/gtd/items.ts';
-import { buildEvents, calendarRange, dayKey, parseDay, parseView, shiftAnchor } from './calendar.ts';
+import { captureItem, listCalendarItems, listGanttItems } from '#lib/gtd/items.ts';
+import { CAL_VIEWS, buildEvents, calendarRange, dayKey, parseDay, parseMode, parseView, scheduleBucket, shiftAnchor } from './calendar.ts';
 
 const d = (y: number, m: number, day: number) => Date.UTC(y, m - 1, day);
 const today = d(2026, 11, 4); // quarta-feira
@@ -92,6 +92,14 @@ describe('listCalendarItems', () => {
 			'mês que vem'
 		]);
 	});
+	it('modos: planejado só considera início; prazos só considera prazo', () => {
+		expect(names(listCalendarItems(db, null, null, undefined, today, false, 1000, 'planned'))).toEqual(['agendado']);
+		expect(names(listCalendarItems(db, null, null, undefined, today, false, 1000, 'deadlines'))).toEqual([
+			'atrasado',
+			'hoje',
+			'mês que vem'
+		]);
+	});
 	it('usa os índices de data', () => {
 		const plan = db
 			.prepare(
@@ -102,5 +110,46 @@ describe('listCalendarItems', () => {
 			.join(' ');
 		expect(plan).toMatch(/idx_items_due/);
 		expect(plan).toMatch(/idx_items_starts/);
+	});
+});
+
+describe('modos e agrupamento de Agendadas', () => {
+	const item = [{ id: 1, dueAt: d(2026, 11, 5), startsAt: d(2026, 11, 5) }];
+	it('buildEvents respeita o modo', () => {
+		const r = calendarRange('week', today, today, 1);
+		expect([...buildEvents(item, r, today, 'planned').byDay.values()].flat().map((e) => e.kind)).toEqual(['start']);
+		expect([...buildEvents(item, r, today, 'deadlines').byDay.values()].flat().map((e) => e.kind)).toEqual(['due']);
+		expect(parseMode('x')).toBe('both');
+		expect(parseMode('planned')).toBe('planned');
+	});
+	it('scheduleBucket: esta semana, próxima semana e futuras', () => {
+		const t0 = d(2026, 11, 4); // quarta
+		expect(scheduleBucket(d(2026, 11, 8), t0, 1)).toBe('thisWeek');
+		expect(scheduleBucket(d(2026, 11, 9), t0, 1)).toBe('nextWeek');
+		expect(scheduleBucket(d(2026, 11, 15), t0, 1)).toBe('nextWeek');
+		expect(scheduleBucket(d(2026, 11, 16), t0, 1)).toBe('future');
+		expect(scheduleBucket(d(2026, 11, 7), t0, 0)).toBe('thisWeek');
+		expect(scheduleBucket(d(2026, 11, 8), t0, 0)).toBe('nextWeek');
+	});
+});
+
+describe('Gantt', () => {
+	it('visão cobre o mês inteiro e a ordem das visões é a esperada', () => {
+		const r = calendarRange('gantt', d(2026, 11, 15), today, 1);
+		expect(r.days).toHaveLength(30);
+		expect(dayKey(r.days[0])).toBe('2026-11-01');
+		expect(CAL_VIEWS).toEqual(['deadlines', '3days', 'next7', 'week', 'month', 'gantt']);
+		expect(dayKey(shiftAnchor('gantt', d(2026, 11, 15), 1))).toBe('2026-12-01');
+	});
+	it('listGanttItems traz só itens com início e prazo que cruzam o intervalo', () => {
+		const db = new DatabaseSync(':memory:');
+		runMigrations(db);
+		const add = (title: string, extra: Record<string, unknown>) => captureItem(db, { title, state: 'next', ...extra }, today);
+		add('cruza', { startsAt: d(2026, 10, 25), dueAt: d(2026, 11, 3) });
+		add('dentro', { startsAt: d(2026, 11, 10), dueAt: d(2026, 11, 12) });
+		add('fora', { startsAt: d(2026, 12, 1), dueAt: d(2026, 12, 5) });
+		add('só prazo', { dueAt: d(2026, 11, 10) });
+		add('só início', { state: 'scheduled', startsAt: d(2026, 11, 10) });
+		expect(listGanttItems(db, d(2026, 11, 1), d(2026, 11, 30), undefined, today).map((i) => i.title)).toEqual(['cruza', 'dentro']);
 	});
 });

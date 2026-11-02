@@ -640,6 +640,25 @@ export function listCalendarItems(
 		.map(mapItem);
 }
 
+// Gantt: itens abertos com início e prazo cujo período cruza [from, to].
+export function listGanttItems(
+	db: DatabaseSync,
+	from: number,
+	to: number,
+	filter: ViewFilter = NO_FILTER,
+	today = startOfTodayUtc(),
+	limit = 500
+): Item[] {
+	const params: SQLInputValue[] = [to, from];
+	let where = `i.state NOT IN ('completed', 'trash') AND i.starts_at IS NOT NULL AND i.due_at IS NOT NULL AND i.starts_at <= ? AND i.due_at >= ?`;
+	where += filterSql(filter, params, today);
+	params.push(limit);
+	return db
+		.prepare(`${SELECT} WHERE ${where} ORDER BY i.starts_at, i.due_at, i.id LIMIT ?`)
+		.all(...params)
+		.map(mapItem);
+}
+
 export type Counts = {
 	inbox: number;
 	waiting: number;

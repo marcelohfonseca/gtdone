@@ -2,7 +2,6 @@
 	import ItemList from '#lib/components/ItemList.svelte';
 	import FilterBar from '#lib/components/FilterBar.svelte';
 	import { postAction } from '#lib/client/actions.ts';
-	import Calendar from '#lib/components/Calendar.svelte';
 	import RapidEntry from '#lib/components/RapidEntry.svelte';
 	import type { PageProps } from './$types';
 
@@ -24,7 +23,7 @@
 	}
 
 	const groupBy = $derived(
-		data.list === 'focus' ? 'focus' : data.list === 'waiting' ? 'contact' : ['next', 'later', 'someday'].includes(data.list) ? 'project' : 'none'
+		data.list === 'focus' ? 'focus' : data.list === 'waiting' ? 'contact' : data.list === 'scheduled' ? 'schedule' : ['next', 'later', 'someday'].includes(data.list) ? 'project' : 'none'
 	);
 </script>
 
@@ -39,18 +38,6 @@
 
 <FilterBar tags={data.tags} contacts={data.contacts} projects={data.projects} />
 
-{#if data.calendar}
-	<Calendar
-		view={data.calendar.view}
-		anchor={data.calendar.anchor}
-		items={data.items}
-		today={data.today}
-		projects={data.projects}
-		areas={data.areas}
-		contacts={data.contacts}
-		tags={data.tags}
-	/>
-{:else}
 {#if data.groupedProjects.length}
 	<h3 class="group">{t('Projetos')}</h3>
 	<ul class="projects">
@@ -82,7 +69,6 @@
 	limitPerProject={data.list === 'next' || data.list === 'later' ? 3 : 0}
 	emptyText={data.meta.empty}
 />
-{/if}
 
 <style>
 	h1 {

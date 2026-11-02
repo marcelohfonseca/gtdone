@@ -31,6 +31,7 @@ export const PREF_DEFS = {
 	focusPosition: { default: 'bottom', options: ['top', 'bottom'] },
 	later: { default: 'on', options: ['on', 'off'] },
 	waiting: { default: 'on', options: ['on', 'off'] },
+	calendar: { default: 'on', options: ['on', 'off'] },
 	sequentialSidebar: { default: 'on', options: ['on', 'off'] },
 	inboxArea: { default: 'keep', options: ['keep', 'assign'] },
 	unassignedUnderFilter: { default: 'hidden', options: ['hidden', 'visible'] }

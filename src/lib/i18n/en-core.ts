@@ -13,7 +13,7 @@ export const EN_CORE: Record<string, string> = {
 	'Delegadas ou dependentes de outra pessoa.': 'Delegated or dependent on someone else.',
 	'Nada aguardando ninguém.': 'Nothing waiting on anyone.',
 	Agendadas: 'Scheduled',
-	'Tudo o que tem data: inícios e prazos.': 'Everything with a date: start dates and deadlines.',
+	'… para uma data futura.': '… for a future date.',
 	'Nenhuma ação agendada.': 'No scheduled actions.',
 	'Algum dia': 'Someday',
 	'Ideias e desejos sem compromisso.': 'Ideas and wishes without commitment.',

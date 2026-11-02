@@ -113,7 +113,7 @@ export const LIST_META: Record<
 	},
 	scheduled: {
 		label: 'Agendadas',
-		subtitle: 'Tudo o que tem data: inícios e prazos.',
+		subtitle: '… para uma data futura.',
 		icon: '📅',
 		empty: 'Nenhuma ação agendada.'
 	},
