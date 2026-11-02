@@ -50,6 +50,11 @@ The database defaults to `data/gtdone.db` and can be relocated with `GTDONE_DB_P
 
 - `src/lib/nlp/quick-add.ts` (`parseQuickAdd`) é um parser de regras, puro e síncrono (sem LLM): `$área`, `@contexto` (vira tag), `!urgência` (alta → Foco), datas em pt/en e recorrência. A ação `capture` o aplica quando `quick=1` (Composer e RapidEntry).
 
-## Calendário ("Agendadas")
+## Agendadas e Calendário
 
-- `/scheduled` renderiza `Calendar.svelte` (visões `?view=deadlines|3days|week|month|next7&date=AAAA-MM-DD`). A lógica pura está em `src/lib/calendar.ts` (intervalos, navegação, eventos por dia); a consulta é `listCalendarItems` (itens abertos com `due_at`/`starts_at` no intervalo, usando `idx_items_due`/`idx_items_starts`). Nome e posição no menu permanecem os da lista Agendadas.
+- `/scheduled` lista só itens `state='scheduled'` (data de início), agrupados por `scheduleBucket` em Esta semana / Próxima semana / Datas futuras (`ItemList` `groupBy='schedule'`).
+- `/calendar` renderiza `Calendar.svelte` (`?view=deadlines|3days|next7|week|month|gantt&mode=both|planned|deadlines&date=AAAA-MM-DD`). Lógica pura em `src/lib/calendar.ts`; consulta `listCalendarItems(..., mode)` usando `idx_items_due`/`idx_items_starts`. A visão `gantt` usa `listGanttItems` (início e prazo cruzando o mês) e ignora `mode`.
+
+## Editor de item
+
+- `ItemEditor.svelte`: coluna direita com Tempo, Energia, Prazo e um menu único "Estado" (Reagendar: Data de início…/Repetir…; Estado: Caixa de entrada, Próximas, Depois, Algum dia, Aguardando ▸ contatos/Novo contato…, Agendadas ▸ data). O menu escreve em campos ocultos (`state`, `startsAt`, `contactId`) e em `recUnit`/`recEvery`; o servidor continua resolvendo o estado via `resolveState`.

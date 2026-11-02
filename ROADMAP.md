@@ -174,9 +174,9 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 - Preferência **Referência** (mostrar/ocultar) na barra lateral; oculta também o atalho `9`.
 - i18n: o texto em português é a chave; dicionários em `src/lib/i18n/en-*.ts`; componentes usam `useT()`. Limites: login/setup e o email do Foco permanecem em português.
 
-### Complemento — Calendário em "Agendadas"
+### Complemento — Agendadas e Calendário
 
-- A página Agendadas agora é um calendário de todo item aberto com prazo ou data de início, com cinco visões: Prazos (agenda sem dias vazios, atrasadas no topo), 3 dias, Semanal, Mensal e 7 dias a partir de hoje. Visão e data ficam na URL; cada visão consulta só o seu intervalo, via índices de data.
+- Agendadas lista só itens com data de início (state scheduled), agrupados em Esta semana, Próxima semana e Datas futuras (`template/schedule.png`). O Calendário é um menu próprio (`/calendar`) com seis visões, nesta ordem (Agenda, 3 dias, 7 dias, Semanal, Mensal, Gantt) e três modos: Planejado (início), Prazos e Ambos. O Gantt mostra, em barras por dia do mês, só itens com início e prazo (cruzando o mês; ignora o modo). Visão, modo e data ficam na URL; cada visão consulta só o seu intervalo, via índices de data.
 
 ## Catálogo de features de referência
 
