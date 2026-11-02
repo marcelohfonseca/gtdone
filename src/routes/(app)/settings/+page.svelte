@@ -68,6 +68,7 @@
 				{ key: 'later', label: 'Depois', options: [['on', 'Ativar'], ['off', 'Desativar']] },
 				{ key: 'waiting', label: 'Aguardando', options: [['on', 'Ativar'], ['off', 'Desativar']] },
 				{ key: 'calendar', label: 'Calendário', options: [['on', 'Ativar'], ['off', 'Desativar']] },
+				{ key: 'kanban', label: 'Kanban', hint: 'Desativar só oculta o menu; os quadros criados são mantidos.', options: [['on', 'Ativar'], ['off', 'Desativar']] },
 				{ key: 'sequentialSidebar', label: 'Projetos sequenciais na barra', options: [['on', 'Mostrar'], ['off', 'Ocultar']] }
 			]
 		},

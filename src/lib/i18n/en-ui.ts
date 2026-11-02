@@ -103,6 +103,7 @@ export const EN_UI: Record<string, string> = {
 	'Agendar para': 'Schedule for',
 	'Remover data': 'Clear date',
 	'Nome do contato:': 'Contact name:',
+	'Desativar só oculta o menu; os quadros criados são mantidos.': 'Disabling only hides the menu; existing boards are kept.',
 	'O que exibir': 'What to show',
 	Ambos: 'Both',
 	Planejado: 'Planned',
