@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { getDb } from '#lib/server/db.ts';
 import { deleteSession } from '#lib/auth/sessions.ts';
@@ -10,6 +11,6 @@ export const actions: Actions = {
 			deleteSession(getDb(), token);
 		}
 		cookies.delete(SESSION_COOKIE, { path: '/' });
-		return { ok: true };
+		redirect(303, '/login');
 	}
 };

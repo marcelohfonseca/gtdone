@@ -28,6 +28,10 @@ export function startBackupScheduler(options: BackupSchedulerOptions): () => voi
 	return () => clearInterval(timer);
 }
 
+export function getBackupDir(): string {
+	return process.env.GTDONE_BACKUP_DIR ?? join(dirname(getDatabasePath()), 'backups');
+}
+
 export function ensureBackupScheduler(db: Database): void {
 	const runtime = globalThis as typeof globalThis & {
 		__gtdoneBackupSchedulerStop?: () => void;
@@ -37,8 +41,7 @@ export function ensureBackupScheduler(db: Database): void {
 	const keep = Number.parseInt(process.env.GTDONE_BACKUP_KEEP ?? '7', 10);
 	runtime.__gtdoneBackupSchedulerStop = startBackupScheduler({
 		db,
-		backupDir:
-			process.env.GTDONE_BACKUP_DIR ?? join(dirname(getDatabasePath()), 'backups'),
+		backupDir: getBackupDir(),
 		keep: Number.isFinite(keep) ? Math.max(1, keep) : 7,
 		onError: (error) => console.error('[GTDone] Falha ao criar backup do SQLite:', error)
 	});
