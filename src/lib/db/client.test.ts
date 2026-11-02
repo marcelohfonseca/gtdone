@@ -10,10 +10,10 @@ function freshDb(): Database {
 }
 
 describe('openDatabase', () => {
-	it('aplica a migração inicial e define a versão do schema', () => {
+	it('aplica as migrações e define a versão atual do schema', () => {
 		const db = freshDb();
 		try {
-			expect(currentVersion(db)).toBe(1);
+			expect(currentVersion(db)).toBe(5);
 		} finally {
 			closeDatabase(db);
 		}
@@ -25,11 +25,11 @@ describe('openDatabase', () => {
 		closeDatabase(db);
 		const reopened = openDatabase(path);
 		try {
-			expect(currentVersion(reopened)).toBe(1);
+			expect(currentVersion(reopened)).toBe(5);
 			const rows = reopened
 				.prepare('SELECT COUNT(*) AS c FROM schema_migrations')
 				.get() as { c: number };
-			expect(Number(rows.c)).toBe(1);
+			expect(Number(rows.c)).toBe(5);
 		} finally {
 			closeDatabase(reopened);
 		}

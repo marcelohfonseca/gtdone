@@ -3,6 +3,8 @@ import type { DatabaseSync } from 'node:sqlite';
 export type Migration = {
 	version: number;
 	name: string;
+	// Recriar tabelas referenciadas exige desligar chaves estrangeiras fora da transação.
+	foreignKeys?: false;
 	up: (db: DatabaseSync) => void;
 };
 
@@ -130,10 +132,134 @@ const MIGRATIONS: Migration[] = [
 				CREATE INDEX idx_sessions_user ON sessions(user_id);
 			`);
 		}
+	},
+	{
+		version: 2,
+		name: 'project-outcomes',
+		up: (db) => {
+			db.exec("ALTER TABLE projects ADD COLUMN desired_outcome TEXT NOT NULL DEFAULT '';");
+		}
+	},
+	{
+		version: 3,
+		name: 'later-project-states-and-item-history',
+		foreignKeys: false,
+		up: (db) => {
+			db.exec(`
+				CREATE TABLE projects_new (
+					id INTEGER PRIMARY KEY,
+					name TEXT NOT NULL,
+					desired_outcome TEXT NOT NULL DEFAULT '',
+					notes TEXT NOT NULL DEFAULT '',
+					state TEXT NOT NULL DEFAULT 'active'
+						CHECK (state IN ('active', 'later', 'scheduled', 'someday', 'completed', 'trash')),
+					area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL,
+					starts_at INTEGER,
+					due_at INTEGER,
+					position INTEGER NOT NULL DEFAULT 0,
+					created_at INTEGER NOT NULL,
+					updated_at INTEGER NOT NULL,
+					completed_at INTEGER
+				);
+				INSERT INTO projects_new (
+					id, name, desired_outcome, notes, state, area_id, position,
+					created_at, updated_at, completed_at
+				)
+				SELECT
+					id, name, desired_outcome, notes, state, area_id, position,
+					created_at, updated_at, completed_at
+				FROM projects;
+
+				CREATE TABLE items_new (
+					id INTEGER PRIMARY KEY,
+					kind TEXT NOT NULL DEFAULT 'task'
+						CHECK (kind IN ('task', 'reference')),
+					title TEXT NOT NULL,
+					notes TEXT NOT NULL DEFAULT '',
+					state TEXT NOT NULL DEFAULT 'inbox'
+						CHECK (state IN ('inbox', 'next', 'later', 'waiting', 'scheduled', 'someday', 'trash', 'completed')),
+					previous_state TEXT
+						CHECK (previous_state IN ('inbox', 'next', 'later', 'waiting', 'scheduled', 'someday')),
+					due_at INTEGER,
+					starts_at INTEGER,
+					energy TEXT CHECK (energy IN ('low', 'medium', 'high')),
+					minutes INTEGER,
+					starred INTEGER NOT NULL DEFAULT 0,
+					project_id INTEGER REFERENCES projects(id),
+					area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL,
+					delegated_to_id INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
+					position INTEGER NOT NULL DEFAULT 0,
+					created_at INTEGER NOT NULL,
+					updated_at INTEGER NOT NULL,
+					completed_at INTEGER
+				);
+				INSERT INTO items_new (
+					id, kind, title, notes, state, due_at, starts_at, energy, minutes, starred,
+					project_id, area_id, delegated_to_id, position, created_at, updated_at, completed_at
+				)
+				SELECT
+					id, kind, title, notes, state, due_at, starts_at, energy, minutes, starred,
+					project_id, area_id, delegated_to_id, position, created_at, updated_at, completed_at
+				FROM items;
+
+				DROP TABLE items;
+				DROP TABLE projects;
+				ALTER TABLE projects_new RENAME TO projects;
+				ALTER TABLE items_new RENAME TO items;
+
+				CREATE INDEX idx_items_state ON items(state);
+				CREATE INDEX idx_items_project ON items(project_id);
+				CREATE INDEX idx_items_area ON items(area_id);
+				CREATE INDEX idx_items_due ON items(due_at);
+				CREATE INDEX idx_items_starts ON items(starts_at);
+				CREATE INDEX idx_items_starred ON items(starred);
+				CREATE INDEX idx_projects_state ON projects(state);
+				CREATE INDEX idx_projects_area ON projects(area_id);
+			`);
+		}
+	},
+	{
+		version: 4,
+		name: 'project-execution-mode',
+		up: (db) => {
+			db.exec(
+				"ALTER TABLE projects ADD COLUMN execution_mode TEXT NOT NULL DEFAULT 'parallel' CHECK (execution_mode IN ('parallel', 'sequential'));"
+			);
+		}
+	},
+	{
+		version: 5,
+		name: 'goals',
+		up: (db) => {
+			db.exec(`
+				CREATE TABLE goals (
+					id INTEGER PRIMARY KEY,
+					name TEXT NOT NULL,
+					description TEXT NOT NULL DEFAULT '',
+					status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'achieved', 'archived')),
+					due_at INTEGER,
+					completed_at INTEGER,
+					created_at INTEGER NOT NULL,
+					updated_at INTEGER NOT NULL
+				);
+				CREATE TABLE goal_links (
+					id INTEGER PRIMARY KEY,
+					goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+					item_id INTEGER REFERENCES items(id) ON DELETE CASCADE,
+					project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+					created_at INTEGER NOT NULL,
+					CHECK ((item_id IS NULL) != (project_id IS NULL))
+				);
+				CREATE UNIQUE INDEX idx_goal_links_item ON goal_links(goal_id, item_id) WHERE item_id IS NOT NULL;
+				CREATE UNIQUE INDEX idx_goal_links_project ON goal_links(goal_id, project_id) WHERE project_id IS NOT NULL;
+				CREATE INDEX idx_goal_links_item_rev ON goal_links(item_id);
+				CREATE INDEX idx_goal_links_project_rev ON goal_links(project_id);
+			`);
+		}
 	}
 ];
 
-export function runMigrations(db: DatabaseSync): void {
+export function runMigrations(db: DatabaseSync, targetVersion = Number.POSITIVE_INFINITY): void {
 	db.exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			version INTEGER PRIMARY KEY,
@@ -146,10 +272,15 @@ export function runMigrations(db: DatabaseSync): void {
 	);
 	const now = Date.now();
 	for (const m of MIGRATIONS) {
-		if (applied.has(m.version)) continue;
+		if (applied.has(m.version) || m.version > targetVersion) continue;
+		const rebuildsTables = m.foreignKeys === false;
+		if (rebuildsTables) db.exec('PRAGMA foreign_keys = OFF;');
 		db.exec('BEGIN;');
 		try {
 			m.up(db);
+			if (rebuildsTables && db.prepare('PRAGMA foreign_key_check').all().length > 0) {
+				throw new Error(`a migração ${m.version} violou chaves estrangeiras`);
+			}
 			db.prepare('INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)').run(
 				m.version,
 				m.name,
@@ -159,6 +290,8 @@ export function runMigrations(db: DatabaseSync): void {
 		} catch (err) {
 			db.exec('ROLLBACK;');
 			throw err;
+		} finally {
+			if (rebuildsTables) db.exec('PRAGMA foreign_keys = ON;');
 		}
 	}
 }
