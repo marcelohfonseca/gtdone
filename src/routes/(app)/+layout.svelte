@@ -237,6 +237,19 @@
 				<hr />
 				{@render focusLink()}
 			{/if}
+			<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
+				<span class="icon">🗓️</span>
+				<span class="label">{t('Calendário')}</span>
+			</a>
+			<h4><a class="h4link" href="/kanban">Kanban</a></h4>
+			{#each data.boards as b (b.id)}
+				<a href={`/kanban/${b.id}`} class:active={path === `/kanban/${b.id}`}>
+					<span class="icon">🗂️</span>
+					<span class="label">{b.name}</span>
+				</a>
+			{:else}
+				<span class="hint">{t('Nenhum quadro')}</span>
+			{/each}
 			<h4><a class="h4link" href="/projects">{t('Projetos')}</a></h4>
 			{#each sidebarProjects as p (p.id)}
 				<a href={`/projects/${p.id}`} class:active={path === `/projects/${p.id}`} data-drop={`project:${p.id}`}>

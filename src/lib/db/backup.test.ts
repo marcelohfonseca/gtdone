@@ -20,7 +20,7 @@ describe('backupDatabase', () => {
 			expect(statSync(result.path).size).toBeGreaterThan(0);
 			const restored = openDatabase(result.path);
 			try {
-				expect(currentVersion(restored)).toBe(5);
+				expect(currentVersion(restored)).toBe(6);
 			} finally {
 				closeDatabase(restored);
 			}

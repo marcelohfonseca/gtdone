@@ -256,6 +256,38 @@ const MIGRATIONS: Migration[] = [
 				CREATE INDEX idx_goal_links_project_rev ON goal_links(project_id);
 			`);
 		}
+	},
+	{
+		version: 6,
+		name: 'kanban-boards',
+		up: (db) => {
+			db.exec(`
+				CREATE TABLE boards (
+					id INTEGER PRIMARY KEY,
+					name TEXT NOT NULL,
+					group_by TEXT NOT NULL DEFAULT 'state' CHECK (group_by IN ('state', 'project', 'area', 'custom')),
+					project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+					position INTEGER NOT NULL DEFAULT 0,
+					created_at INTEGER NOT NULL,
+					updated_at INTEGER NOT NULL
+				);
+				CREATE TABLE board_columns (
+					id INTEGER PRIMARY KEY,
+					board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+					name TEXT NOT NULL,
+					state_key TEXT,
+					position INTEGER NOT NULL DEFAULT 0
+				);
+				CREATE INDEX idx_board_columns_board ON board_columns(board_id, position);
+				CREATE TABLE board_cards (
+					board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+					item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+					column_id INTEGER NOT NULL REFERENCES board_columns(id) ON DELETE CASCADE,
+					PRIMARY KEY (board_id, item_id)
+				);
+				CREATE INDEX idx_board_cards_column ON board_cards(column_id);
+			`);
+		}
 	}
 ];
 

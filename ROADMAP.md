@@ -254,3 +254,4 @@ Uma feature só está concluída quando:
 
 - Objetivos (migração 5): tabelas `goals` e `goal_links` (vínculo com ação ou projeto). Sidebar abaixo de Projetos, páginas `/goals` e `/goals/[id]`, `GoalPicker` nos editores de ação e projeto. Lógica em `src/lib/gtd/goals.ts`.
 - Próximas/Depois: em projetos paralelos só as 3 primeiras ações aparecem, com "Mostrar mais N ação(ões)" / "Mostrar menos" (`limitPerProject` em `ItemList.svelte`).
+- Kanban (migração 6): tabelas `boards`, `board_columns`, `board_cards`; vários quadros salvos, na barra lateral acima de Projetos. Agrupamento por estado, projeto, área ou colunas personalizadas; colunas renomeáveis; filtro por projeto; mover por arrastar ou seletor. Lógica em `src/lib/gtd/kanban.ts`, páginas `/kanban` e `/kanban/[id]`.

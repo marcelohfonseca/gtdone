@@ -1,5 +1,13 @@
 // Mensagens de erro do domínio (GtdError). Chaves terminadas em ':' ou '…' casam por prefixo.
 export const EN_SERVER: Record<string, string> = {
+	'área inválida': 'invalid area',
+	'quadro não encontrado': 'board not found',
+	'coluna não encontrada': 'column not found',
+	'coluna inválida': 'invalid column',
+	'agrupamento inválido': 'invalid grouping',
+	'as colunas deste agrupamento são automáticas': 'columns for this grouping are automatic',
+	'já existe uma coluna para esse estado': 'a column for that state already exists',
+	'nome muito longo': 'name too long',
 	'objetivo não encontrado': 'goal not found',
 	'destino do vínculo não encontrado': 'link target not found',
 	'tipo de vínculo inválido': 'invalid link type',

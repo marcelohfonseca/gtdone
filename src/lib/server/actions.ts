@@ -38,6 +38,16 @@ import {
 	updateGoal,
 	type LinkTarget
 } from '#lib/gtd/goals.ts';
+import {
+	addColumn,
+	createBoard,
+	deleteBoard,
+	moveCard,
+	removeColumn,
+	renameColumn,
+	shiftColumn,
+	updateBoard
+} from '#lib/gtd/kanban.ts';
 import { loadPreferences, type Preferences } from '#lib/gtd/preferences.ts';
 import { listNamed } from '#lib/gtd/organize.ts';
 import { parseQuickAdd } from '#lib/nlp/quick-add.ts';
@@ -284,6 +294,37 @@ export const appActions = {
 		if (ids.some((n) => !Number.isInteger(n) || n < 1)) throw new GtdError('identificador inválido');
 		setGoalsFor(db, readTarget(fd), ids);
 	}),
+	createBoard: async (ev: RequestEvent) => {
+		let id: number;
+		try {
+			const fd = await ev.request.formData();
+			id = createBoard(getDb(), { name: fd.get('name'), groupBy: fd.get('groupBy') ?? 'state', projectId: optId(fd, 'projectId') });
+		} catch (e) {
+			if (e instanceof GtdError) return fail(e.status, { error: e.message });
+			throw e;
+		}
+		redirect(303, `/kanban/${id}`);
+	},
+	updateBoard: act((db, fd) => {
+		const input: Parameters<typeof updateBoard>[2] = {};
+		if (has(fd, 'name')) input.name = fd.get('name');
+		if (has(fd, 'groupBy')) input.groupBy = fd.get('groupBy');
+		if (has(fd, 'projectId')) input.projectId = optId(fd, 'projectId');
+		updateBoard(db, reqId(fd), input);
+	}),
+	deleteBoard: act((db, fd) => deleteBoard(db, reqId(fd))),
+	boardColumn: act((db, fd) => {
+		const boardId = reqId(fd, 'boardId');
+		const op = String(fd.get('op') ?? '');
+		if (op === 'add') addColumn(db, boardId, fd.get('name'), fd.get('stateKey'));
+		else if (op === 'rename') renameColumn(db, boardId, reqId(fd, 'columnId'), fd.get('name'));
+		else if (op === 'remove') removeColumn(db, boardId, reqId(fd, 'columnId'));
+		else if (op === 'left' || op === 'right') shiftColumn(db, boardId, reqId(fd, 'columnId'), op === 'left' ? -1 : 1);
+		else throw new GtdError('operação inválida');
+	}),
+	boardMove: act((db, fd, _ev, today) =>
+		moveCard(db, reqId(fd, 'boardId'), reqId(fd, 'itemId'), String(fd.get('column') ?? ''), today)
+	),
 	deleteForever: act((db, fd) => deleteItemPermanently(db, reqId(fd))),
 	emptyTrash: act((db) => {
 		emptyTrash(db);

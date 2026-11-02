@@ -583,6 +583,10 @@ export function listItems(
 		case 'inbox':
 			where = "i.state = 'inbox'";
 			break;
+		case 'scheduled':
+			where = `i.state = 'scheduled'${ACTIONABLE}`;
+			order = 'i.starts_at IS NULL, i.starts_at, i.position, i.id';
+			break;
 		default:
 			where = `i.state = ?${ACTIONABLE}${list === 'next' ? SEQUENTIAL : ''}`;
 			params.push(list);
@@ -607,7 +611,8 @@ export function listCalendarItems(
 	filter: ViewFilter = NO_FILTER,
 	today = startOfTodayUtc(),
 	includeOverdue = false,
-	limit = 1000
+	limit = 1000,
+	mode: 'both' | 'planned' | 'deadlines' = 'both'
 ): Item[] {
 	const params: SQLInputValue[] = [];
 	const bound = (col: string, lo: number | null) => {
@@ -622,9 +627,11 @@ export function listCalendarItems(
 		}
 		return `(${parts.join(' AND ')})`;
 	};
-	const due = bound('i.due_at', includeOverdue ? null : from);
-	const start = bound('i.starts_at', includeOverdue ? (from ?? today) : from);
-	let where = `i.state NOT IN ('completed', 'trash') AND (${due} OR ${start})`;
+	// A ordem dos parâmetros segue a de uso em `dates`: prazo antes de início.
+	const due = mode === 'planned' ? '' : bound('i.due_at', includeOverdue ? null : from);
+	const start = mode === 'deadlines' ? '' : bound('i.starts_at', includeOverdue ? (from ?? today) : from);
+	const dates = mode === 'planned' ? start : mode === 'deadlines' ? due : `(${due} OR ${start})`;
+	let where = `i.state NOT IN ('completed', 'trash') AND ${dates}`;
 	where += filterSql(filter, params, today);
 	params.push(limit);
 	return db
@@ -699,3 +706,23 @@ export function projectItems(db: DatabaseSync, projectId: number, completedLast 
 }
 
 export { STATE_LISTS };
+
+// Itens exibidos nos quadros Kanban: tudo que não está na lixeira; concluídos limitados aos 100 mais recentes.
+export function listBoardItems(
+	db: DatabaseSync,
+	filter: ViewFilter,
+	today: number,
+	projectId: number | null
+): Item[] {
+	const params: SQLInputValue[] = [];
+	const where = filterSql({ ...filter, projectId: projectId ?? filter.projectId }, params, today);
+	return db
+		.prepare(
+			`${SELECT} WHERE i.state != 'trash'
+			AND (i.state != 'completed' OR i.id IN (
+				SELECT id FROM items WHERE state = 'completed' ORDER BY completed_at DESC LIMIT 100))${where}
+			ORDER BY i.position, i.id`
+		)
+		.all(...params)
+		.map(mapItem);
+}

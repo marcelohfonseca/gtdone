@@ -4,6 +4,8 @@ export const EN_SHELL: Record<string, string> = {
 	Projetos: 'Projects',
 	'Nenhum projeto ativo': 'No active projects',
 	'Nenhum objetivo ativo': 'No active goals',
+	'Nenhum quadro': 'No boards',
+	Calendário: 'Calendar',
 	Tags: 'Tags',
 	Referência: 'Reference',
 	'Revisão semanal': 'Weekly review',

@@ -3,6 +3,7 @@ import { activateScheduled, countItems, purgeLogbook } from '#lib/gtd/items.ts';
 import { getSetting, listNamed } from '#lib/gtd/organize.ts';
 import { activateScheduledProjects, listProjects } from '#lib/gtd/projects.ts';
 import { goalIdsByTarget, listGoals } from '#lib/gtd/goals.ts';
+import { listBoards } from '#lib/gtd/kanban.ts';
 import { loadPreferences } from '#lib/gtd/preferences.ts';
 import { loadViewFilter } from '#lib/server/actions.ts';
 import { getDb } from '#lib/server/db.ts';
@@ -29,6 +30,7 @@ export const load: LayoutServerLoad = ({ cookies, url }) => {
 		tags: listNamed(db, 'tags'),
 		contacts: listNamed(db, 'contacts'),
 		filter,
+		boards: listBoards(db).map((b) => ({ id: b.id, name: b.name })),
 		goals: listGoals(db).map((g) => ({ id: g.id, name: g.name })),
 		goalLinks: goalIdsByTarget(db),
 		sidebarProjects: listProjects(db, ['active'], filter).map((p) => ({
