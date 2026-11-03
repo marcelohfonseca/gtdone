@@ -27,7 +27,10 @@ import {
 	projectFromItem,
 	updateProject,
 	completeProject,
-	reopenProject
+	reopenProject,
+	trashProject,
+	restoreProject,
+	deleteProjectPermanently
 } from '#lib/gtd/projects.ts';
 import {
 	createGoal,
@@ -135,6 +138,10 @@ function applyQuickAdd(db: DatabaseSync, input: ItemInput, today: number) {
 	input.title = r.title;
 	if (r.area && input.areaId === undefined) input.areaId = areas.find((a) => a.name === r.area)?.id;
 	if (r.contexts.length && input.tags === undefined) input.tags = r.contexts;
+	if (r.contacts.length && input.contactId === undefined) {
+		const name = r.contacts[0];
+		input.contactId = resolveTagField(db, `@${name}`).contactId;
+	}
 	if (r.urgency === 'high') input.starred = true;
 	if (r.dueAt != null && input.dueAt === undefined) input.dueAt = r.dueAt;
 	if (r.recurrence && input.recurrence === undefined) input.recurrence = `${r.recurrence.unit}:${r.recurrence.every}`;
@@ -255,6 +262,9 @@ export const appActions = {
 		const id = reqId(fd);
 		if (fd.get('complete') === '1') return completeProject(db, id);
 		if (fd.get('reopen') === '1') return reopenProject(db, id);
+		if (fd.get('trash') === '1') return trashProject(db, id);
+		if (fd.get('restore') === '1') return restoreProject(db, id, today);
+		if (fd.get('purge') === '1') return deleteProjectPermanently(db, id);
 		const split = has(fd, 'tags') ? resolveTagField(db, fd.get('tags'), false) : null;
 		updateProject(
 			db,

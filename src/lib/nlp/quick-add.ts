@@ -1,4 +1,5 @@
-// Quick Add: extrai $área, @contexto, !urgência, data e recorrência de uma frase.
+// Quick Add: extrai !área, @pessoa, #contexto, urgência (!alta, !!), data e recorrência de uma frase.
+// "$área" continua aceito como forma antiga de !área.
 // Baseado em regras, síncrono e sem dependências externas. Datas são meia-noite UTC (ms),
 // o mesmo formato usado pelo restante do app.
 
@@ -10,15 +11,16 @@ export type QuickAddOptions = {
 	today: number;
 	/** Ordem de dia/mês em datas numéricas como 03/04. Padrão: 'dmy'. */
 	dateOrder?: 'dmy' | 'mdy';
-	/** Se informado, "$nome" só é consumido quando existir uma área com esse nome. */
+	/** Se informado, "!nome" e "$nome" só são consumidos quando existir uma área com esse nome. */
 	areas?: string[];
 };
 
-export type QuickAddToken = { kind: 'area' | 'context' | 'urgency' | 'date' | 'recurrence'; raw: string };
+export type QuickAddToken = { kind: 'area' | 'contact' | 'context' | 'urgency' | 'date' | 'recurrence'; raw: string };
 
 export type QuickAddResult = {
 	title: string;
 	area: string | null;
+	contacts: string[];
 	contexts: string[];
 	urgency: Urgency | null;
 	dueAt: number | null;
@@ -290,7 +292,7 @@ const URGENCY: Record<string, Urgency> = {
 const SIGIL = String.raw`(?<![^\s])`;
 
 /**
- * Interpreta frases como "Ligar para João amanhã @telefone $Trabalho !alta".
+ * Interpreta frases como "Ligar para João amanhã #telefone !Trabalho @Ana !alta".
  * Nunca lança: o que não for reconhecido permanece no título.
  */
 export function parseQuickAdd(input: string, options: QuickAddOptions): QuickAddResult {
@@ -302,13 +304,13 @@ export function parseQuickAdd(input: string, options: QuickAddOptions): QuickAdd
 		text = `${text.slice(0, index)} ${text.slice(index + length)}`;
 	};
 
-	// $área: $Trabalho, $"Casa e Família"
+	// !área (ou $área): !Trabalho, !"Casa e Família"; só vale quando a área existe
 	let area: string | null = null;
 	const known = options.areas?.map((a) => [norm(a), a] as const);
-	const areaRe = new RegExp(String.raw`${SIGIL}\$(?:"([^"]+)"|(\p{L}[\p{L}\p{N}_-]*))`, 'gu');
+	const areaRe = new RegExp(String.raw`${SIGIL}[$!](?:"([^"]+)"|(\p{L}[\p{L}\p{N}_-]*))`, 'gu');
 	for (const m of text.matchAll(areaRe)) {
 		const name = (m[1] ?? m[2]).trim();
-		const hit = known ? known.find(([n]) => n === norm(name))?.[1] : name;
+		const hit = known ? known.find(([n]) => n === norm(name))?.[1] : m[0][0] === '$' ? name : undefined;
 		if (hit == null) continue;
 		area = hit;
 		tokens.push({ kind: 'area', raw: m[0] });
@@ -316,17 +318,22 @@ export function parseQuickAdd(input: string, options: QuickAddOptions): QuickAdd
 		break;
 	}
 
-	// @contexto: @telefone, @"em casa"; vários permitidos, sem repetição
-	const contexts: string[] = [];
-	const ctxRe = new RegExp(String.raw`${SIGIL}@(?:"([^"]+)"|([\p{L}\p{N}][\p{L}\p{N}_-]*))`, 'gu');
-	for (const m of [...text.matchAll(ctxRe)].reverse()) {
-		const name = (m[1] ?? m[2]).trim();
-		if (!contexts.some((c) => c.toLowerCase() === name.toLowerCase())) contexts.unshift(name);
-		tokens.push({ kind: 'context', raw: m[0] });
-		cut(m.index, m[0].length);
-	}
+	// @pessoa e #contexto: vários permitidos, sem repetição
+	const collect = (sigil: string, kind: 'contact' | 'context') => {
+		const found: string[] = [];
+		const re = new RegExp(String.raw`${SIGIL}${sigil}(?:"([^"]+)"|(\p{L}[\p{L}\p{N}_-]*))`, 'gu');
+		for (const m of [...text.matchAll(re)].reverse()) {
+			const name = (m[1] ?? m[2]).trim();
+			if (!found.some((c) => c.toLowerCase() === name.toLowerCase())) found.unshift(name);
+			tokens.push({ kind, raw: m[0] });
+			cut(m.index, m[0].length);
+		}
+		return found;
+	};
+	const contacts = collect('@', 'contact');
+	const contexts = collect('#', 'context');
 
-	// !urgência: !alta, !urgente, !p1, !1, !!, !!!
+	// urgência: !alta, !urgente, !p1, !1, !!, !!!
 	let urgency: Urgency | null = null;
 	const urgRe = new RegExp(String.raw`${SIGIL}!(!{1,2}|[\p{L}\p{N}]+)${END}`, 'gu');
 	for (const m of text.matchAll(urgRe)) {
@@ -362,7 +369,7 @@ export function parseQuickAdd(input: string, options: QuickAddOptions): QuickAdd
 		.trim();
 	if (!title) {
 		// Só havia marcadores: mantém a frase original como título e ignora o parsing.
-		return { title: original.trim(), area: null, contexts: [], urgency: null, dueAt: null, recurrence: null, tokens: [] };
+		return { title: original.trim(), area: null, contacts: [], contexts: [], urgency: null, dueAt: null, recurrence: null, tokens: [] };
 	}
-	return { title, area, contexts, urgency, dueAt, recurrence, tokens };
+	return { title, area, contacts, contexts, urgency, dueAt, recurrence, tokens };
 }

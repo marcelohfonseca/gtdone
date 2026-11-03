@@ -4,7 +4,7 @@
 	import { LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
 	import { scheduleBucket } from '#lib/calendar.ts';
 	import ItemRow from './ItemRow.svelte';
-	import { copyText, itemsAsText } from '#lib/format.ts';
+	import { TIME_OPTIONS, copyText, itemsAsText } from '#lib/format.ts';
 	import { usePrefs, useT } from '#lib/prefs-context.ts';
 
 	type Named = { id: number; name: string; color?: string | null };
@@ -164,7 +164,7 @@
 		{#if selecting}
 			<button class="ghost" onclick={() => (selected = items.map((i) => i.id))}>{t('Todos')}</button>
 			<span class="muted">{t('{n} selecionado(s)', { n: selected.length })}</span>
-			<select bind:value={op} aria-label={t('Operação em lote')}>
+			<select bind:value={op} onchange={() => (arg = op === 'move' ? 'next' : '')} aria-label={t('Operação em lote')}>
 				<option value="complete">{t('Concluir')}</option>
 				<option value="move">{t('Mover para…')}</option>
 				<option value="tag">{t('Adicionar tag…')}</option>
@@ -172,12 +172,31 @@
 				<option value="unstar">{t('Remover do Foco')}</option>
 				<option value="trash">{t('Excluir')}</option>
 				<option value="restore">{t('Restaurar')}</option>
+				<option value="due">{t('Definir prazo…')}</option>
+				<option value="start">{t('Definir data de início…')}</option>
+				<option value="energy">{t('Definir energia…')}</option>
+				<option value="minutes">{t('Definir tempo…')}</option>
 			</select>
 			{#if op === 'move'}
 				<select bind:value={arg} aria-label={t('Lista de destino')}>
 					{#each STATE_LISTS.filter((s) => s !== 'scheduled') as s (s)}
 						<option value={s}>{t(LIST_META[s].label)}</option>
 					{/each}
+				</select>
+			{:else if op === 'due' || op === 'start'}
+				<input type="date" bind:value={arg} aria-label={t('Data')} />
+				<span class="muted">{t('(vazio remove a data)')}</span>
+			{:else if op === 'energy'}
+				<select bind:value={arg} aria-label={t('Energia')}>
+					<option value="">{t('Sem energia')}</option>
+					<option value="low">{t('Baixa')}</option>
+					<option value="medium">{t('Média')}</option>
+					<option value="high">{t('Alta')}</option>
+				</select>
+			{:else if op === 'minutes'}
+				<select bind:value={arg} aria-label={t('Tempo')}>
+					<option value="">{t('Sem estimativa')}</option>
+					{#each TIME_OPTIONS as o (o.value)}<option value={String(o.value)}>{t(o.label)}</option>{/each}
 				</select>
 			{:else if op === 'tag'}
 				<input bind:value={arg} placeholder={t('tag')} aria-label={t('Tag')} />

@@ -48,7 +48,7 @@ The database defaults to `data/gtdone.db` and can be relocated with `GTDONE_DB_P
 
 ## Quick Add
 
-- `src/lib/nlp/quick-add.ts` (`parseQuickAdd`) é um parser de regras, puro e síncrono (sem LLM): `$área`, `@contexto` (vira tag), `!urgência` (alta → Foco), datas em pt/en e recorrência. A ação `capture` o aplica quando `quick=1` (Composer e RapidEntry).
+- `src/lib/nlp/quick-add.ts` (`parseQuickAdd`) é um parser de regras, puro e síncrono (sem LLM): `!área` (se existir; senão `!alta`/`!p1` = urgência → Foco), `@pessoa` (contato), `#contexto` (tag), `$área` legado, datas em pt/en e recorrência. A ação `capture` o aplica quando `quick=1` (Composer e RapidEntry).
 
 ## Agendadas e Calendário
 

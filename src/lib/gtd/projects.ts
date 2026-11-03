@@ -1,7 +1,7 @@
 import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
 import { GtdError } from './core.ts';
 import { ensureTagIds, parseTagNames } from './organize.ts';
-import { type ViewFilter, NO_FILTER, getItem } from './items.ts';
+import { type ViewFilter, NO_FILTER, getItem, restoreItem } from './items.ts';
 
 export const PROJECT_STATES = ['active', 'later', 'scheduled', 'someday'] as const;
 export type ProjectState = (typeof PROJECT_STATES)[number];
@@ -191,6 +191,50 @@ export function reopenProject(db: DatabaseSync, id: number): void {
 	db.prepare(
 		"UPDATE projects SET state = 'active', completed_at = NULL, updated_at = ? WHERE id = ?"
 	).run(Date.now(), id);
+}
+
+// Projeto na lixeira leva junto as ações abertas; o carimbo de tempo em completed_at/updated_at
+// identifica quais ações voltam na restauração.
+export function trashProject(db: DatabaseSync, id: number): void {
+	const cur = getProject(db, id);
+	if (cur.state === 'trash') return;
+	const now = Date.now();
+	db.exec('BEGIN;');
+	try {
+		db.prepare(
+			`UPDATE items SET previous_state = state, state = 'trash', updated_at = ?
+			WHERE project_id = ? AND state NOT IN ('completed', 'trash')`
+		).run(now, id);
+		db.prepare("UPDATE projects SET state = 'trash', completed_at = ?, updated_at = ? WHERE id = ?").run(now, now, id);
+		db.exec('COMMIT;');
+	} catch (e) {
+		db.exec('ROLLBACK;');
+		throw e;
+	}
+}
+
+export function restoreProject(db: DatabaseSync, id: number, today: number): void {
+	const cur = getProject(db, id);
+	if (cur.state !== 'trash') return;
+	const stamp = cur.completedAt;
+	db.exec('BEGIN;');
+	try {
+		if (stamp != null) {
+			const rows = db.prepare("SELECT id FROM items WHERE project_id = ? AND state = 'trash' AND updated_at = ?").all(id, stamp);
+			for (const r of rows) restoreItem(db, Number(r.id), today);
+		}
+		db.prepare("UPDATE projects SET state = 'active', completed_at = NULL, updated_at = ? WHERE id = ?").run(Date.now(), id);
+		db.exec('COMMIT;');
+	} catch (e) {
+		db.exec('ROLLBACK;');
+		throw e;
+	}
+}
+
+export function deleteProjectPermanently(db: DatabaseSync, id: number): void {
+	if (getProject(db, id).state !== 'trash') throw new GtdError('só é possível excluir projetos da lixeira');
+	db.prepare("DELETE FROM items WHERE project_id = ? AND state = 'trash'").run(id);
+	db.prepare('DELETE FROM projects WHERE id = ?').run(id);
 }
 
 export function activateScheduledProjects(db: DatabaseSync, today: number): void {

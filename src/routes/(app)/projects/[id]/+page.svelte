@@ -4,6 +4,7 @@
 	import GoalPicker from '#lib/components/GoalPicker.svelte';
 	import RapidEntry from '#lib/components/RapidEntry.svelte';
 	import { postAction } from '#lib/client/actions.ts';
+	import { goto } from '$app/navigation';
 	import { toDateInput } from '#lib/gtd/core.ts';
 	import type { PageProps } from './$types';
 
@@ -47,6 +48,22 @@
 		error = (await postAction('updateProject', { id: p.id, reopen: '1' })) ?? '';
 	}
 
+	async function trash() {
+		if (!confirm(t('Enviar este projeto e suas ações abertas para a lixeira?'))) return;
+		error = (await postAction('updateProject', { id: p.id, trash: '1' })) ?? '';
+		if (!error) editing = false;
+	}
+
+	async function restore() {
+		error = (await postAction('updateProject', { id: p.id, restore: '1' })) ?? '';
+	}
+
+	async function purge() {
+		if (!confirm(t('Excluir definitivamente? Isso não pode ser desfeito.'))) return;
+		error = (await postAction('updateProject', { id: p.id, purge: '1' }, '/inbox')) ?? '';
+		if (!error) await goto('/trash');
+	}
+
 	async function complete() {
 		error = (await postAction('updateProject', { id: p.id, complete: '1' })) ?? '';
 	}
@@ -76,6 +93,7 @@
 					<button type="submit">{t('Salvar')}</button>
 					<button type="button" class="ghost" onclick={cancel}>{t('Cancelar')}</button>
 					<button type="button" class="ghost" onclick={complete}>{t('Concluir projeto')}</button>
+					<button type="button" class="ghost danger" onclick={trash}>{t('Excluir projeto')}</button>
 				</div>
 			</div>
 			<div class="side">
@@ -105,6 +123,11 @@
 	</div>
 	<p class="muted">{p.state === 'completed' ? t('Projeto concluído.') : t('Projeto na lixeira.')}</p>
 	{#if p.state === 'completed'}<button class="ghost" onclick={reopen}>{t('Reabrir projeto')}</button>{/if}
+	{#if p.state === 'trash'}
+		<button class="ghost" onclick={restore}>{t('Restaurar')}</button>
+		<button class="ghost danger" onclick={purge}>{t('Excluir definitivamente')}</button>
+	{/if}
+	{#if error}<p class="error">{t.msg(error)}</p>{/if}
 {/if}
 
 <ItemList

@@ -34,13 +34,26 @@ export function daysBetween(from: number, to: number): number {
 
 export const RECURRENCE_UNITS = ['daily', 'weekly', 'monthly', 'yearly'] as const;
 export type RecurrenceUnit = (typeof RECURRENCE_UNITS)[number];
-export type Recurrence = { unit: RecurrenceUnit; every: number };
+export type Recurrence = {
+	unit: RecurrenceUnit;
+	every: number;
+	/** Dias da semana (0 = domingo) em regras semanais. */
+	weekdays?: number[];
+	/** Conta a partir da conclusão, não da data anterior. */
+	after?: boolean;
+	/** Última data (meia-noite UTC) em que ainda pode ocorrer. */
+	until?: number;
+	/** Repetições restantes depois da ocorrência atual. */
+	count?: number;
+};
 
-// Formato guardado: "weekly:2" (a cada 2 semanas). Vazio = sem recorrência.
+// Formato guardado: "weekly:2" (a cada 2 semanas) com extras opcionais separados por ";":
+// "weekly:1;wd=1,3;after=1;until=2026-12-31;count=4". Vazio = sem recorrência.
 export function parseRecurrence(value: unknown): Recurrence | null {
 	const raw = String(value ?? '').trim();
 	if (!raw) return null;
-	const [unit, n] = raw.split(':');
+	const [head, ...extras] = raw.split(';');
+	const [unit, n] = head.split(':');
 	const every = Number(n ?? 1);
 	if (
 		!(RECURRENCE_UNITS as readonly string[]).includes(unit) ||
@@ -50,7 +63,34 @@ export function parseRecurrence(value: unknown): Recurrence | null {
 	) {
 		throw new GtdError('recorrência inválida');
 	}
-	return { unit: unit as RecurrenceUnit, every };
+	const rule: Recurrence = { unit: unit as RecurrenceUnit, every };
+	for (const extra of extras) {
+		const [key, val = ''] = extra.split('=');
+		if (key === 'wd') {
+			const days = [...new Set(val.split(',').filter(Boolean).map(Number))].sort();
+			if (days.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) throw new GtdError('recorrência inválida');
+			if (unit === 'weekly' && days.length) rule.weekdays = days;
+		} else if (key === 'after') {
+			if (val === '1') rule.after = true;
+		} else if (key === 'until') {
+			const until = parseDateInput(val);
+			if (until != null) rule.until = until;
+		} else if (key === 'count') {
+			const count = Number(val);
+			if (!Number.isInteger(count) || count < 0 || count > 1000) throw new GtdError('recorrência inválida');
+			rule.count = count;
+		} else if (key) throw new GtdError('recorrência inválida');
+	}
+	return rule;
+}
+
+export function serializeRecurrence(rule: Recurrence): string {
+	const parts = [`${rule.unit}:${rule.every}`];
+	if (rule.weekdays?.length) parts.push(`wd=${rule.weekdays.join(',')}`);
+	if (rule.after) parts.push('after=1');
+	if (rule.until != null) parts.push(`until=${toDateInput(rule.until)}`);
+	if (rule.count != null) parts.push(`count=${rule.count}`);
+	return parts.join(';');
 }
 
 // Soma meses preservando o último dia do mês quando o dia não existe (31/jan + 1 mês = 28/fev).
@@ -60,7 +100,15 @@ export function advanceDate(ms: number, rule: Recurrence): number {
 	const m = d.getUTCMonth();
 	const day = d.getUTCDate();
 	if (rule.unit === 'daily') return ms + rule.every * DAY;
-	if (rule.unit === 'weekly') return ms + rule.every * 7 * DAY;
+	if (rule.unit === 'weekly') {
+		const days = rule.weekdays;
+		if (!days?.length) return ms + rule.every * 7 * DAY;
+		const dow = d.getUTCDay();
+		const later = days.find((w) => w > dow);
+		if (later != null) return ms + (later - dow) * DAY;
+		// semana (domingo a sábado) do dia atual + "a cada N" semanas, no primeiro dia marcado
+		return ms - dow * DAY + rule.every * 7 * DAY + days[0] * DAY;
+	}
 	const months = rule.unit === 'monthly' ? rule.every : rule.every * 12;
 	const target = m + months;
 	const last = new Date(Date.UTC(y + Math.floor(target / 12), (target % 12) + 1, 0)).getUTCDate();

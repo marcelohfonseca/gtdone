@@ -1,4 +1,4 @@
-import { daysBetween, toDateInput } from '#lib/gtd/core.ts';
+import { daysBetween, parseRecurrence, toDateInput } from '#lib/gtd/core.ts';
 import { translate } from '#lib/i18n/index.ts';
 
 export const TIME_OPTIONS = [
@@ -50,29 +50,36 @@ export function extractLinks(text: string): string[] {
 	return [...new Set(found.map((u) => u.replace(/[.,;:!?)\]]+$/, '')))];
 }
 
-export function recurrenceLabel(rule: string | null, lang = 'pt-BR'): string {
+const WEEKDAYS_LABEL = {
+	'pt-BR': ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'],
+	'en-US': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+};
+
+export function recurrenceLabel(raw: string | null, lang = 'pt-BR'): string {
+	if (!raw) return '';
+	const rule = parseRecurrence(raw);
 	if (!rule) return '';
-	const [unit, n] = rule.split(':');
-	const every = Number(n);
-	const names: Record<string, [string, string]> = {
-		daily: ['dia', 'dias'],
-		weekly: ['semana', 'semanas'],
-		monthly: ['mês', 'meses'],
-		yearly: ['ano', 'anos']
+	const { unit, every } = rule;
+	const en = lang === 'en-US';
+	const names: Record<string, [string, string, string, string]> = {
+		daily: ['dia', 'dias', 'day', 'days'],
+		weekly: ['semana', 'semanas', 'week', 'weeks'],
+		monthly: ['mês', 'meses', 'month', 'months'],
+		yearly: ['ano', 'anos', 'year', 'years']
 	};
-	const [one, many] = names[unit] ?? ['?', '?'];
-	if (lang === 'en-US') {
-		const en: Record<string, [string, string]> = {
-			dia: ['Every day', 'days'],
-			semana: ['Every week', 'weeks'],
-			mês: ['Every month', 'months'],
-			ano: ['Every year', 'years']
-		};
-		return every === 1 ? en[one][0] : `Every ${every} ${en[one][1]}`;
-	}
-	if (every !== 1) return `A cada ${every} ${many}`;
-	return `${one === 'semana' ? 'Toda' : 'Todo'} ${one}`;
+	const [one, many, enOne, enMany] = names[unit];
+	let text: string;
+	if (en) text = every === 1 ? `Every ${enOne}` : `Every ${every} ${enMany}`;
+	else if (every !== 1) text = `A cada ${every} ${many}`;
+	else text = `${unit === 'weekly' ? 'Toda' : 'Todo'} ${one}`;
+	const labels = WEEKDAYS_LABEL[en ? 'en-US' : 'pt-BR'];
+	if (rule.weekdays?.length) text += ` (${rule.weekdays.map((d) => labels[d]).join(', ')})`;
+	if (rule.after) text += en ? ' · after completion' : ' · após a conclusão';
+	if (rule.until != null) text += en ? ` · until ${toDateInput(rule.until)}` : ` · até ${toDateInput(rule.until)}`;
+	if (rule.count != null) text += en ? ` · ${rule.count} more` : ` · mais ${rule.count}`;
+	return text;
 }
+
 
 type TextItem = {
 	title: string;

@@ -24,8 +24,8 @@ import {
 	listReferences
 } from './items.ts';
 import { loadPreferences, savePreferences } from './preferences.ts';
-import { createProject, getProject, listProjects, projectFromItem, reopenProject, completeProject, updateProject } from './projects.ts';
-import { createNamed, deleteNamed, listNamed, parseTagNames, setNamedColor, resolveTagField } from './organize.ts';
+import { trashProject, restoreProject, createProject, getProject, listProjects, projectFromItem, reopenProject, completeProject, updateProject } from './projects.ts';
+import { createNamed, deleteNamed, listNamed, convertNamed, parseTagNames, setNamedColor, resolveTagField } from './organize.ts';
 import { GtdError, parseDateInput, advanceDate, parseRecurrence } from './core.ts';
 
 const TODAY = Date.UTC(2025, 5, 10);
@@ -293,6 +293,26 @@ describe('fase 5', () => {
 		expect(() => captureItem(db, { title: 'x', recurrence: 'daily:1' }, TODAY)).toThrow(GtdError);
 	});
 
+	it('recorrência por dias da semana, após a conclusão e com fim', () => {
+		const db = memDb();
+		// 2025-06-09 é segunda; seg/qua/sex
+		const mon = Date.UTC(2025, 5, 9);
+		expect(advanceDate(mon, { unit: 'weekly', every: 1, weekdays: [1, 3, 5] })).toBe(Date.UTC(2025, 5, 11));
+		expect(advanceDate(Date.UTC(2025, 5, 13), { unit: 'weekly', every: 2, weekdays: [1, 3, 5] })).toBe(Date.UTC(2025, 5, 23));
+		expect(parseRecurrence('weekly:1;wd=1,3;after=1;until=2025-12-31;count=2')).toMatchObject({ weekdays: [1, 3], after: true, count: 2 });
+
+		const a = captureItem(db, { title: 'após', state: 'next', dueAt: Date.UTC(2025, 0, 1), recurrence: 'daily:3;after=1' }, TODAY);
+		expect(getItem(db, completeItem(db, a, TODAY)!).dueAt).toBe(TODAY + 3 * 86_400_000);
+
+		const b = captureItem(db, { title: 'fim', state: 'next', dueAt: TODAY, recurrence: 'daily:1;count=1' }, TODAY);
+		const b2 = completeItem(db, b, TODAY)!;
+		expect(getItem(db, b2).recurrence).toBe('daily:1;count=0');
+		expect(completeItem(db, b2, TODAY)).toBeNull();
+
+		const c = captureItem(db, { title: 'até', state: 'next', dueAt: TODAY, recurrence: 'daily:1;until=2025-06-10' }, TODAY);
+		expect(completeItem(db, c, TODAY)).toBeNull();
+	});
+
 	it('conclusão em lote respeita recorrência', () => {
 		const db = memDb();
 		const id = captureItem(db, { title: 'r', state: 'next', dueAt: TODAY, recurrence: 'daily:1' }, TODAY);
@@ -353,5 +373,40 @@ describe('cor da área', () => {
 		expect(listNamed(db, 'areas').map((a) => a.name)).toContain('Novo');
 		expect(listNamed(db, 'contacts').map((c) => c.name)).toContain('Bia');
 		expect(resolveTagField(db, '@Bia, !Trabalho', false)).toEqual({ areaId: area, contactId: null, tags: '' });
+	});
+});
+
+describe('conversão de tipo de tag', () => {
+	it('contexto vira pessoa e volta, levando os itens', () => {
+		const db = new DatabaseSync(':memory:');
+		runMigrations(db);
+		const item = captureItem(db, { title: 'Ligar', tags: 'ana' }, TODAY);
+		const contactId = convertNamed(db, 'tags', listNamed(db, 'tags')[0].id);
+		expect(listNamed(db, 'tags')).toHaveLength(0);
+		expect(getItem(db, item).contactId).toBe(contactId);
+		convertNamed(db, 'contacts', contactId);
+		expect(getItem(db, item).tags).toEqual(['ana']);
+		expect(listNamed(db, 'contacts')).toHaveLength(0);
+	});
+});
+
+describe('projeto na lixeira e edição em lote', () => {
+	it('envia projeto à lixeira, restaura e edita em lote', () => {
+		const db = memDb();
+		const today = TODAY;
+		const pid = createProject(db, { name: 'P' }, today);
+		const a = captureItem(db, { title: 'a', projectId: pid, state: 'next' }, today);
+		trashProject(db, pid);
+		expect(getItem(db, a).state).toBe('trash');
+		restoreProject(db, pid, today);
+		expect(getItem(db, a).state).toBe('next');
+		bulkApply(db, [a], 'energy', today, 'high');
+		bulkApply(db, [a], 'minutes', today, '30');
+		bulkApply(db, [a], 'due', today, '2030-01-02');
+		const it = getItem(db, a);
+		expect([it.energy, it.minutes, it.dueAt]).toEqual(['high', 30, Date.UTC(2030, 0, 2)]);
+		trashProject(db, pid);
+		emptyTrash(db);
+		expect(db.prepare('SELECT COUNT(*) n FROM projects').get()!.n).toBe(0);
 	});
 });

@@ -14,7 +14,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		later: ['later'],
 		scheduled: ['scheduled'],
 		someday: ['someday'],
-		logbook: ['completed']
+		logbook: ['completed'],
+		trash: ['trash']
 	};
 	const items = listItems(db, list, filter, today);
 	return {

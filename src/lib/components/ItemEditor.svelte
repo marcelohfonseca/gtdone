@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { postAction } from '#lib/client/actions.ts';
-	import { toDateInput, LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
-	import { TIME_OPTIONS, extractLinks } from '#lib/format.ts';
+	import { toDateInput, parseDateInput, parseRecurrence, serializeRecurrence, LIST_META, STATE_LISTS, type RecurrenceUnit } from '#lib/gtd/core.ts';
+	import { TIME_OPTIONS, extractLinks, recurrenceLabel } from '#lib/format.ts';
 	import type { Item } from '#lib/gtd/items.ts';
 	import TagInput from './TagInput.svelte';
 	import GoalPicker from './GoalPicker.svelte';
-	import { useT } from '#lib/prefs-context.ts';
+	import { usePrefs, useT } from '#lib/prefs-context.ts';
 
 	const t = useT();
+	const prefs = usePrefs();
 
 	type Named = { id: number; name: string };
 	let {
@@ -57,9 +58,35 @@
 	// svelte-ignore state_referenced_locally
 	let contactId = $state(item.contactId == null ? '' : String(item.contactId));
 	// svelte-ignore state_referenced_locally
-	let recUnit = $state((item.recurrence ?? ':1').split(':')[0]);
+	const rec0 = parseRecurrence(item.recurrence);
 	// svelte-ignore state_referenced_locally
-	let recEvery = $state((item.recurrence ?? ':1').split(':')[1] || '1');
+	let recUnit = $state<string>(rec0?.unit ?? '');
+	// svelte-ignore state_referenced_locally
+	let recEvery = $state(String(rec0?.every ?? 1));
+	// svelte-ignore state_referenced_locally
+	let recDays = $state<number[]>(rec0?.weekdays ?? []);
+	// svelte-ignore state_referenced_locally
+	let recAfter = $state(rec0?.after ?? false);
+	// svelte-ignore state_referenced_locally
+	let recUntil = $state(toDateInput(rec0?.until ?? null));
+	// svelte-ignore state_referenced_locally
+	let recCount = $state(rec0?.count == null ? '' : String(rec0.count));
+	const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+	function toggleDay(d: number) {
+		recDays = recDays.includes(d) ? recDays.filter((x) => x !== d) : [...recDays, d].sort();
+	}
+	const recValue = $derived(
+		recUnit
+			? serializeRecurrence({
+					unit: recUnit as RecurrenceUnit,
+					every: Number(recEvery) || 1,
+					weekdays: recUnit === 'weekly' ? recDays : undefined,
+					after: recAfter || undefined,
+					until: recUntil ? (parseDateInput(recUntil) ?? undefined) : undefined,
+					count: recCount === '' ? undefined : Number(recCount)
+				})
+			: ''
+	);
 	let menuOpen = $state(false);
 	let sub = $state<'' | 'start' | 'repeat' | 'waiting' | 'scheduled'>('');
 	let wrap = $state<HTMLElement>();
@@ -111,7 +138,7 @@
 		const data: Record<string, string> = { id: String(item.id) };
 		fd.forEach((v, k) => (data[k] = String(v)));
 		data.starred = item.starred ? '1' : '0';
-		data.recurrence = recUnit ? `${recUnit}:${recEvery || 1}` : '';
+		data.recurrence = recValue;
 		const err = await postAction('edit', data);
 		busy = false;
 		if (err) error = err;
@@ -206,7 +233,7 @@
 			<button type="button" class="trigger" disabled={readOnly} aria-haspopup="menu" aria-expanded={menuOpen} onclick={() => (menuOpen = !menuOpen)}>
 				<span>{stateLabel}</span><span aria-hidden="true">▾</span>
 			</button>
-			{#if recUnit}<span class="cap">🔁 {t('A cada')} {recEvery} · {t(({ daily: 'Dias', weekly: 'Semanas', monthly: 'Meses', yearly: 'Anos' } as Record<string, string>)[recUnit] ?? recUnit)}</span>{/if}
+			{#if recValue}<span class="cap">🔁 {recurrenceLabel(recValue, prefs().lang)}</span>{/if}
 			<input type="hidden" name="state" value={st} />
 			<input type="hidden" name="startsAt" value={startsAt} />
 			<input type="hidden" name="contactId" value={contactId} />
@@ -232,6 +259,18 @@
 							</select>
 							{#if recUnit}<input type="number" min="1" max="365" bind:value={recEvery} aria-label={t('A cada')} />{/if}
 						</div>
+						{#if recUnit === 'weekly'}
+							<div class="inline wd">
+								{#each WEEKDAY_LABELS as label, d (d)}
+									<button type="button" class="day" class:on={recDays.includes(d)} aria-pressed={recDays.includes(d)} onclick={() => toggleDay(d)}>{t(label)}</button>
+								{/each}
+							</div>
+						{/if}
+						{#if recUnit}
+							<label class="inline"><input type="checkbox" bind:checked={recAfter} /> {t('Contar a partir da conclusão')}</label>
+							<label class="inline">{t('Terminar em')} <input type="date" bind:value={recUntil} /></label>
+							<label class="inline">{t('Repetir mais')} <input type="number" min="0" max="1000" bind:value={recCount} placeholder="∞" /> {t('vez(es)')}</label>
+						{/if}
 					{/if}
 					<div class="mhead">{t('Estado')}</div>
 					{#each MENU_STATES as l (l)}
@@ -397,6 +436,18 @@
 		flex-direction: column;
 		align-items: stretch;
 		padding-left: 1.5rem;
+	}
+	.wd {
+		flex-wrap: wrap;
+	}
+	.day {
+		padding: 0.1rem 0.4rem;
+		font-size: 0.72rem;
+		border-radius: 0.3rem;
+	}
+	.day.on {
+		background: var(--accent);
+		color: #fff;
 	}
 	.cap {
 		font-size: 0.75rem;

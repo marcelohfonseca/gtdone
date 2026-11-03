@@ -64,6 +64,43 @@ export function setNamedColor(db: DatabaseSync, kind: NamedKind, id: number, col
 	db.prepare(`UPDATE ${TABLE[kind]} SET color = ?, updated_at = ? WHERE id = ?`).run(c ? c.toLowerCase() : null, Date.now(), id);
 }
 
+// Troca o tipo de um contexto (tag) por pessoa e vice-versa, levando os vínculos junto.
+// Contexto → pessoa: itens com a tag ganham o contato (se ainda não tiverem outro).
+// Pessoa → contexto: itens delegados à pessoa ganham a tag.
+export function convertNamed(db: DatabaseSync, from: 'tags' | 'contacts', id: number): number {
+	const to = from === 'tags' ? 'contacts' : 'tags';
+	const row = db.prepare(`SELECT name, color FROM ${TABLE[from]} WHERE id = ?`).get(id);
+	if (!row) throw new GtdError('cadastro não encontrado');
+	const name = String(row.name);
+	const now = Date.now();
+	db.exec('BEGIN;');
+	try {
+		let target = db.prepare(`SELECT id FROM ${TABLE[to]} WHERE lower(name) = lower(?)`).get(name)?.id;
+		if (target == null) {
+			target = db
+				.prepare(`INSERT INTO ${TABLE[to]} (name, color, created_at, updated_at) VALUES (?, ?, ?, ?)`)
+				.run(name, row.color ?? null, now, now).lastInsertRowid;
+		}
+		const targetId = Number(target);
+		if (from === 'tags') {
+			db.prepare(
+				`UPDATE items SET delegated_to_id = ?, updated_at = ? WHERE delegated_to_id IS NULL
+				 AND id IN (SELECT item_id FROM item_tags WHERE tag_id = ?)`
+			).run(targetId, now, id);
+		} else {
+			db.prepare(
+				`INSERT OR IGNORE INTO item_tags (item_id, tag_id) SELECT id, ? FROM items WHERE delegated_to_id = ?`
+			).run(targetId, id);
+		}
+		db.prepare(`DELETE FROM ${TABLE[from]} WHERE id = ?`).run(id);
+		db.exec('COMMIT;');
+		return targetId;
+	} catch (e) {
+		db.exec('ROLLBACK;');
+		throw e;
+	}
+}
+
 export function deleteNamed(db: DatabaseSync, kind: NamedKind, id: number): void {
 	db.prepare(`DELETE FROM ${TABLE[kind]} WHERE id = ?`).run(id);
 }

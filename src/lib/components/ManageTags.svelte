@@ -49,6 +49,9 @@
 	function remove(e: Entry) {
 		if (confirm(t('Excluir este cadastro? Os itens vinculados não são apagados.'))) void run('delete', { id: e.id });
 	}
+	function convert(e: Entry) {
+		void run('convert', { id: e.id });
+	}
 	function color(e: Entry, value: string) {
 		void run('color', { id: e.id, color: value });
 	}
@@ -81,6 +84,11 @@
 						<span class="cap">{e.name}</span>
 						<button role="menuitem" onclick={() => rename(e)}>{t('Renomear…')}</button>
 						<button role="menuitem" class="danger" onclick={() => remove(e)}>{t('Excluir…')}</button>
+						{#if tab !== 'areas'}
+							<span class="cap">{t('Tipo')}</span>
+							<button role="menuitem" onclick={() => tab === 'tags' && convert(e)}><span class="check">{tab === 'contacts' ? '✓' : ''}</span>{t('Pessoa')}</button>
+							<button role="menuitem" onclick={() => tab === 'contacts' && convert(e)}><span class="check">{tab === 'tags' ? '✓' : ''}</span>{t('Contexto')}</button>
+						{/if}
 						<span class="cap">{t('Cor')}</span>
 						<button role="menuitem" onclick={() => color(e, '')}><span class="check">{!e.color ? '✓' : ''}</span>{t('nenhuma')}</button>
 						{#each COLORS as [c, label] (c)}

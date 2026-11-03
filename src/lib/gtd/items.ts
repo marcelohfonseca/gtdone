@@ -2,8 +2,11 @@ import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
 import {
 	GtdError,
 	startOfTodayUtc,
+	parseDateInput,
 	parseRecurrence,
 	advanceDate,
+	serializeRecurrence,
+	type Recurrence,
 	isStateList,
 	type ListName,
 	type StateList,
@@ -261,7 +264,7 @@ export function setRecurrence(db: DatabaseSync, id: number, value: unknown): voi
 	}
 	db.prepare(
 		'INSERT INTO recurrences (item_id, rule) VALUES (?, ?) ON CONFLICT(item_id) DO UPDATE SET rule = excluded.rule'
-	).run(id, `${rule.unit}:${rule.every}`);
+	).run(id, serializeRecurrence(rule));
 }
 
 export function moveItem(
@@ -303,18 +306,39 @@ export function completeItem(db: DatabaseSync, id: number, today = startOfTodayU
 		archive(db, id, 'completed');
 		if (!cur.recurrence) return null;
 		const rule = parseRecurrence(cur.recurrence)!;
+		if (rule.count != null && rule.count <= 0) return null;
+		const next = nextOccurrence(cur, rule, today);
+		const nextDate = next.dueAt ?? next.startsAt;
+		if (rule.until != null && nextDate != null && nextDate > rule.until) return null;
 		const nextId = copyItem(db, cur, {
 			title: cur.title,
 			state: cur.state === 'inbox' ? 'next' : cur.state,
-			dueAt: cur.dueAt == null ? null : advanceDate(cur.dueAt, rule),
-			startsAt: cur.startsAt == null ? null : advanceDate(cur.startsAt, rule),
+			dueAt: next.dueAt,
+			startsAt: next.startsAt,
 			resetChecklist: true,
 			today
 		});
+		const nextRule = serializeRecurrence({ ...rule, count: rule.count == null ? undefined : rule.count - 1 });
 		db.prepare('DELETE FROM recurrences WHERE item_id = ?').run(id);
-		db.prepare('INSERT INTO recurrences (item_id, rule) VALUES (?, ?)').run(nextId, cur.recurrence);
+		db.prepare('INSERT INTO recurrences (item_id, rule) VALUES (?, ?)').run(nextId, nextRule);
 		return nextId;
 	});
+}
+
+// "Após a conclusão" parte de hoje e mantém a distância entre início e prazo.
+function nextOccurrence(cur: Item, rule: Recurrence, today: number): { dueAt: number | null; startsAt: number | null } {
+	if (!rule.after) {
+		return {
+			dueAt: cur.dueAt == null ? null : advanceDate(cur.dueAt, rule),
+			startsAt: cur.startsAt == null ? null : advanceDate(cur.startsAt, rule)
+		};
+	}
+	const base = advanceDate(today, rule);
+	if (cur.dueAt != null) {
+		const gap = cur.startsAt == null ? null : cur.dueAt - cur.startsAt;
+		return { dueAt: base, startsAt: gap == null ? null : base - gap };
+	}
+	return { dueAt: null, startsAt: base };
 }
 
 function copyItem(
@@ -461,7 +485,9 @@ export function deleteItemPermanently(db: DatabaseSync, id: number): void {
 }
 
 export function emptyTrash(db: DatabaseSync): number {
-	return Number(db.prepare("DELETE FROM items WHERE state = 'trash'").run().changes);
+	const n = Number(db.prepare("DELETE FROM items WHERE state = 'trash'").run().changes);
+	db.prepare("DELETE FROM projects WHERE state = 'trash'").run();
+	return n;
 }
 
 // Remove do Diário o que foi concluído há mais de `days` dias (0 = guardar para sempre).
@@ -474,7 +500,25 @@ export function purgeLogbook(db: DatabaseSync, days: number, now = Date.now()): 
 	);
 }
 
-export const BULK_OPS = ['move', 'complete', 'trash', 'restore', 'tag', 'star', 'unstar'] as const;
+export const BULK_OPS = [
+	'move',
+	'complete',
+	'trash',
+	'restore',
+	'tag',
+	'star',
+	'unstar',
+	'due',
+	'start',
+	'energy',
+	'minutes'
+] as const;
+const BULK_EDIT: Record<string, (arg: string) => ItemInput> = {
+	due: (arg) => ({ dueAt: parseDateInput(arg) }),
+	start: (arg) => ({ startsAt: parseDateInput(arg) }),
+	energy: (arg) => ({ energy: (arg || null) as Item['energy'] }),
+	minutes: (arg) => ({ minutes: arg || null })
+};
 
 export function bulkApply(
 	db: DatabaseSync,
@@ -485,6 +529,7 @@ export function bulkApply(
 ): void {
 	if (!(BULK_OPS as readonly string[]).includes(op)) throw new GtdError('operação inválida');
 	if (ids.length === 0) throw new GtdError('selecione ao menos um item');
+	const edits = op in BULK_EDIT ? BULK_EDIT[op](arg) : {};
 	tx(db, () => {
 		for (const id of ids) {
 			if (op === 'move') moveItem(db, id, arg, today);
@@ -492,7 +537,10 @@ export function bulkApply(
 			else if (op === 'trash') trashItem(db, id);
 			else if (op === 'restore') restoreItem(db, id, today);
 			else if (op === 'star' || op === 'unstar') setStarred(db, id, op === 'star');
-			else {
+			else if (op in BULK_EDIT) {
+				const cur = getItem(db, id);
+				if (cur.state !== 'trash' && cur.state !== 'completed') updateItem(db, id, edits, today);
+			} else {
 				const names = parseTagNames(arg);
 				if (names.length === 0) throw new GtdError('informe a tag');
 				const cur = getItem(db, id);

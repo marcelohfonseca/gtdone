@@ -17,6 +17,15 @@
 		error = (await postAction('updateProject', { id, reopen: '1' })) ?? '';
 	}
 
+	async function restoreProject(id: number) {
+		error = (await postAction('updateProject', { id, restore: '1' })) ?? '';
+	}
+
+	async function purgeProject(id: number) {
+		if (!confirm(t('Excluir definitivamente? Isso não pode ser desfeito.'))) return;
+		error = (await postAction('updateProject', { id, purge: '1' })) ?? '';
+	}
+
 	async function emptyTrash() {
 		if (!confirm(t('Esvaziar a lixeira? Os itens serão excluídos definitivamente.'))) return;
 		error = (await postAction('emptyTrash', {})) ?? '';
@@ -46,6 +55,10 @@
 			{#each data.groupedProjects as p (p.id)}
 				<li><span class="actions-badge">{p.openCount} {p.openCount === 1 ? t('ação') : t('ações')}</span> <a href={`/projects/${p.id}`}>{p.name}</a>
 					{#if data.list === 'logbook'}<button class="ghost" onclick={() => reopen(p.id)}>{t('Reabrir')}</button>{/if}
+				{#if data.list === 'trash'}
+					<button class="ghost" onclick={() => restoreProject(p.id)}>{t('Restaurar')}</button>
+					<button class="ghost danger" onclick={() => purgeProject(p.id)}>{t('Excluir definitivamente')}</button>
+				{/if}
 				</li>
 			{/each}
 		</ul>
@@ -55,7 +68,7 @@
 {#if !inactiveList && data.list !== 'next'}{@render projectGroup()}{/if}
 
 {#if error}<p class="error">{t.msg(error)}</p>{/if}
-{#if data.list === 'trash' && data.items.length}
+{#if data.list === 'trash' && (data.items.length || data.groupedProjects.length)}
 	<button class="ghost" onclick={emptyTrash}>{t('Esvaziar lixeira')}</button>
 {/if}
 

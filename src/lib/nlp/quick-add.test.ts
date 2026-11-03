@@ -7,8 +7,14 @@ const p = (s: string, o = {}) => parseQuickAdd(s, { today, ...o });
 
 describe('parseQuickAdd: marcadores', () => {
 	it('extrai área, contextos e urgência', () => {
-		const r = p('Ligar para o João $Trabalho @telefone @"em casa" !alta');
-		expect(r).toMatchObject({ title: 'Ligar para o João', area: 'Trabalho', contexts: ['telefone', 'em casa'], urgency: 'high' });
+		const r = p('Ligar para o João $Trabalho #telefone #"em casa" @Ana !alta');
+		expect(r).toMatchObject({ title: 'Ligar para o João', area: 'Trabalho', contacts: ['Ana'], contexts: ['telefone', 'em casa'], urgency: 'high' });
+	});
+	it('!nome vira área quando existe; senão tenta urgência', () => {
+		const areas = ['Trabalho'];
+		expect(p('x !trabalho !alta', { areas })).toMatchObject({ area: 'Trabalho', urgency: 'high', title: 'x' });
+		expect(p('x !Pessoal', { areas })).toMatchObject({ area: null, title: 'x !Pessoal' });
+		expect(p('ver issue #12 @', { areas }).contexts).toEqual([]);
 	});
 	it('aceita níveis de urgência alternativos', () => {
 		expect(p('x !p2').urgency).toBe('medium');
