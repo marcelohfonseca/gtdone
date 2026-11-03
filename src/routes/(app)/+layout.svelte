@@ -314,6 +314,8 @@
 					{#each data.tags as t (t.id)}
 						<a
 							class="tag"
+							class:tinted={t.color}
+							style:--tint={t.color}
 							class:active={data.filter.tagId === t.id}
 							href={tagHref(t.id)}>#{t.name}</a
 						>
@@ -640,6 +642,10 @@
 		border-radius: 1rem;
 		background: var(--surface-2);
 		font-size: 0.75rem;
+	}
+	nav .tag.tinted {
+		background: color-mix(in srgb, var(--tint) 22%, transparent);
+		color: var(--tint);
 	}
 	nav .tag.active {
 		background: var(--accent);
