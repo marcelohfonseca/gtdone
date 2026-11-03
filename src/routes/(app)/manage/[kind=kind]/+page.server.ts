@@ -30,7 +30,7 @@ export const actions: Actions = {
 	rename: run((kind, fd) => renameNamed(getDb(), kind, Number(fd.get('id')), fd.get('name'))),
 	color: run((kind, fd) => {
 		if (kind !== 'areas') throw new GtdError('operação inválida');
-		setAreaColor(getDb(), Number(fd.get('id')), fd.get('clear') ? '' : fd.get('color'));
+		setAreaColor(getDb(), Number(fd.get('id')), fd.get('color'));
 	}),
 	delete: run((kind, fd) => deleteNamed(getDb(), kind, Number(fd.get('id'))))
 };

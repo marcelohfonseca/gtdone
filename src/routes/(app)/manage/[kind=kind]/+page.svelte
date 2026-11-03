@@ -5,6 +5,13 @@
 
 	let { data, form }: PageProps = $props();
 	const t = useT();
+	const COLORS = ['#e5484d', '#f76b15', '#f5b700', '#30a46c', '#12a594', '#3e63dd', '#8e4ec6', '#d6409f'];
+
+	function pick(ev: Event, color: string) {
+		const form = (ev.currentTarget as HTMLElement).closest('form')!;
+		(form.elements.namedItem('color') as HTMLInputElement).value = color;
+		form.requestSubmit();
+	}
 </script>
 
 <svelte:head><title>{t(data.title)} · GTDone</title></svelte:head>
@@ -26,11 +33,16 @@
 				<button type="submit" class="ghost">{t('Renomear')}</button>
 			</form>
 			{#if data.kind === 'areas'}
-				<form method="POST" action="?/color" use:enhance class="color">
+				<form method="POST" action="?/color" use:enhance class="palette" aria-label={t('Cor de destaque')}>
 					<input type="hidden" name="id" value={e.id} />
-					<input type="color" name="color" value={e.color ?? '#888888'} aria-label={t('Cor de destaque')} />
-					<button type="submit" class="ghost">{t('Aplicar cor')}</button>
-					{#if e.color}<button type="submit" class="ghost" name="clear" value="1">{t('Sem cor')}</button>{/if}
+					<input type="hidden" name="color" value={e.color ?? ''} />
+					<button type="button" class="dot none" class:on={!e.color} title={t('Sem cor')} aria-label={t('Sem cor')} onclick={(ev) => pick(ev, '')}></button>
+					{#each COLORS as c (c)}
+						<button type="button" class="dot" class:on={e.color === c} style:background={c} aria-label={c} onclick={(ev) => pick(ev, c)}></button>
+					{/each}
+					<label class="dot custom" class:on={!!e.color && !COLORS.includes(e.color)} style:background={e.color && !COLORS.includes(e.color) ? e.color : undefined} title={t('Cor personalizada')}>
+						<input type="color" value={e.color ?? '#888888'} onchange={(ev) => pick(ev, ev.currentTarget.value)} />
+					</label>
 				</form>
 			{/if}
 			<form method="POST" action="?/delete" use:enhance>
@@ -67,6 +79,46 @@
 	.add input,
 	li input[name='name'] {
 		flex: 1;
+	}
+	.palette {
+		align-items: center;
+		gap: 0.3rem;
+	}
+	.dot {
+		all: unset;
+		box-sizing: border-box;
+		width: 1.15rem;
+		height: 1.15rem;
+		border-radius: 50%;
+		cursor: pointer;
+		border: 2px solid transparent;
+		position: relative;
+	}
+	.dot:hover {
+		transform: scale(1.15);
+	}
+	.dot.on {
+		border-color: var(--text);
+		box-shadow: 0 0 0 2px var(--bg);
+	}
+	.dot.none {
+		background: linear-gradient(135deg, transparent 45%, var(--danger) 45% 55%, transparent 55%);
+		border: 1px solid var(--border);
+	}
+	.dot.none.on {
+		border: 2px solid var(--text);
+	}
+	.dot.custom {
+		background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+		overflow: hidden;
+	}
+	.dot.custom input {
+		opacity: 0;
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		cursor: pointer;
 	}
 	.error {
 		color: var(--danger);

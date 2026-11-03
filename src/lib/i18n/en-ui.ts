@@ -105,7 +105,7 @@ export const EN_UI: Record<string, string> = {
 	'Nome do contato:': 'Contact name:',
 	'Desativar só oculta o menu; os quadros criados são mantidos.': 'Disabling only hides the menu; existing boards are kept.',
 	Visualizações: 'Views',
-	'Aplicar cor': 'Apply color',
+	'Cor personalizada': 'Custom color',
 	'Sem cor': 'No color',
 	'O que exibir': 'What to show',
 	Ambos: 'Both',
