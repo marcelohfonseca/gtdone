@@ -87,7 +87,7 @@
 			}
 			map.get(key)!.items.push(it);
 		}
-		return [...map.values()].sort((a, b) => Number(a.key === 'p0') - Number(b.key === 'p0'));
+		return [...map.values()].sort((a, b) => Number(b.key === 'p0') - Number(a.key === 'p0'));
 	});
 
 	const prefs = usePrefs();
