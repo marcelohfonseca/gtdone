@@ -16,8 +16,7 @@
 		contacts,
 		tags,
 		groupBy = 'none',
-		limitPerProject = 0,
-		limitTotal = 0,
+		limitPerGroup = 0,
 		emptyText
 	}: {
 		items: Item[];
@@ -27,10 +26,8 @@
 		contacts: Named[];
 		tags: Named[];
 		groupBy?: 'none' | 'project' | 'contact' | 'focus' | 'state' | 'schedule';
-		// Em grupos de projeto, mostra só as primeiras N ações até o usuário expandir (0 = sem limite).
-		limitPerProject?: number;
-		// Limita o total de itens exibidos, na ordem dos grupos, até o usuário expandir (0 = sem limite).
-		limitTotal?: number;
+		// Em grupos de projeto ou de estado, mostra só as primeiras N ações de cada grupo até o usuário expandir (0 = sem limite).
+		limitPerGroup?: number;
 		emptyText: string;
 	} = $props();
 
@@ -104,22 +101,9 @@
 	let dragId: number | null = null;
 	let expanded = $state<string[]>([]);
 
-	let showAll = $state(false);
-	const capped = $derived(limitTotal > 0 && !showAll && items.length > limitTotal);
-	const shownByGroup = $derived.by(() => {
-		const map = new Map<string, Item[]>();
-		let left = limitTotal;
-		for (const g of groups) {
-			map.set(g.key, g.items.slice(0, Math.max(left, 0)));
-			left -= g.items.length;
-		}
-		return map;
-	});
-
 	function visible(group: Group): Item[] {
-		if (capped) return shownByGroup.get(group.key) ?? [];
-		const limited = limitPerProject > 0 && groupBy === 'project' && group.title !== null;
-		return limited && !expanded.includes(group.key) ? group.items.slice(0, limitPerProject) : group.items;
+		const limited = limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state') && group.title !== null;
+		return limited && !expanded.includes(group.key) ? group.items.slice(0, limitPerGroup) : group.items;
 	}
 
 	async function reorder(group: Group, ids: number[]) {
@@ -206,7 +190,7 @@
 	<p class="empty">{t(emptyText)}</p>
 {/if}
 {#each groups as group (group.key)}
-	{#if group.title && visible(group).length}
+	{#if group.title}
 		<h3 class="group">
 			{#if group.href}<a href={group.href}>{group.title}</a>{:else}{group.title}{/if}
 		</h3>
@@ -248,22 +232,17 @@
 				</div>
 			</div>
 		{/each}
-		{#if !capped && group.items.length > visible(group).length}
+		{#if group.items.length > visible(group).length}
 			<button class="ghost more" onclick={() => (expanded = [...expanded, group.key])}>
 				{t('Mostrar mais {n} ação(ões)', { n: group.items.length - visible(group).length })}
 			</button>
-		{:else if !capped && limitPerProject > 0 && groupBy === 'project' && expanded.includes(group.key) && group.items.length > limitPerProject}
+		{:else if limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state') && expanded.includes(group.key) && group.items.length > limitPerGroup}
 			<button class="ghost more" onclick={() => (expanded = expanded.filter((k) => k !== group.key))}>
 				{t('Mostrar menos')}
 			</button>
 		{/if}
 	</div>
 {/each}
-{#if limitTotal > 0 && items.length > limitTotal}
-	<button class="ghost more" onclick={() => (showAll = !showAll)}>
-		{showAll ? t('Mostrar menos') : t('Mostrar mais {n} ação(ões)', { n: items.length - limitTotal })}
-	</button>
-{/if}
 
 <style>
 	.more {

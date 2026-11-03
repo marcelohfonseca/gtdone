@@ -116,7 +116,7 @@
 	tags={data.tags}
 	emptyText={t('Nenhuma ação neste projeto.')}
 	groupBy="state"
-	limitTotal={10}
+	limitPerGroup={10}
 />
 
 <style>

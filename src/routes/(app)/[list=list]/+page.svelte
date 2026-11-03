@@ -66,7 +66,7 @@
 	contacts={data.contacts}
 	tags={data.tags}
 	{groupBy}
-	limitPerProject={data.list === 'next' || data.list === 'later' ? 3 : 0}
+	limitPerGroup={data.list === 'next' || data.list === 'later' ? 3 : 0}
 	emptyText={data.meta.empty}
 />
 
