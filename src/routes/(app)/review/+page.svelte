@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { postAction } from '#lib/client/actions.ts';
 	import ItemList from '#lib/components/ItemList.svelte';
 	import type { PageProps } from './$types';
 	import { useT } from '#lib/prefs-context.ts';
@@ -14,6 +15,16 @@
 		scheduled: ['Agendadas', 'Confira datas de início e se algo precisa de preparação.', 'Nada agendado.'],
 		someday: ['Algum dia', 'Algo merece sair daqui e virar ação? Algo pode ser descartado?', 'Nada guardado.']
 	};
+	let drafts = $state<Record<number, string>>({});
+	let errors = $state<Record<number, string>>({});
+
+	async function addNext(id: number) {
+		const title = (drafts[id] ?? '').trim();
+		if (!title) return;
+		const err = await postAction('capture', { title, state: 'next', projectId: id });
+		errors[id] = err ? t.msg(err) : '';
+		if (!err) drafts[id] = '';
+	}
 	const copy = $derived(COPY[data.name]);
 	const last = $derived(data.step === data.total - 1);
 </script>
@@ -28,10 +39,27 @@
 {#if data.name === 'projects'}
 	<ul>
 		{#each data.reviewProjects as p (p.id)}
-			<li>
-				<a href={`/projects/${p.id}`}>{p.name}</a>
-				<span class="chip">{p.state}</span>
-				{#if p.stalled}<span class="chip warn">{t('sem próxima ação')}</span>{/if}
+			<li class:stalled={p.stalled}>
+				<div class="head">
+					<a href={`/projects/${p.id}`}>{p.name}</a>
+					<span class="chip">{p.state}</span>
+					{#if p.stalled}<span class="chip warn">{t('sem próxima ação')}</span>{/if}
+				</div>
+				{#if p.stalled}
+					<input
+						class="add"
+						placeholder={t('Próxima ação para este projeto… (Enter para adicionar)')}
+						aria-label={t('Próxima ação para {name}', { name: p.name })}
+						bind:value={drafts[p.id]}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								void addNext(p.id);
+							}
+						}}
+					/>
+					{#if errors[p.id]}<span class="err">{errors[p.id]}</span>{/if}
+				{/if}
 			</li>
 		{:else}
 			<li class="muted">{t(copy[2])}</li>
@@ -76,9 +104,31 @@
 	}
 	li {
 		display: flex;
-		gap: 0.6rem;
-		padding: 0.45rem 0;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.55rem 0;
 		border-bottom: 1px solid var(--border);
+	}
+	li.stalled {
+		padding: 0.6rem 0.75rem;
+		margin: 0.4rem 0;
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--danger);
+		border-radius: 6px;
+		background: var(--surface);
+	}
+	.head {
+		display: flex;
+		gap: 0.6rem;
+		align-items: center;
+	}
+	.add {
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.err {
+		color: var(--danger);
+		font-size: 0.85rem;
 	}
 	.chip {
 		font-size: 0.7rem;

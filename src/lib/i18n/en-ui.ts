@@ -107,6 +107,8 @@ export const EN_UI: Record<string, string> = {
 	Visualizações: 'Views',
 	'Cor personalizada': 'Custom color',
 	'Sem cor': 'No color',
+	'Próxima ação para este projeto… (Enter para adicionar)': 'Next action for this project… (Enter to add)',
+	'Próxima ação para {name}': 'Next action for {name}',
 	'O que exibir': 'What to show',
 	Ambos: 'Both',
 	Planejado: 'Planned',
