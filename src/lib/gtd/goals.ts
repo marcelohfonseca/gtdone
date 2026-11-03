@@ -10,6 +10,7 @@ export type Goal = {
 	description: string;
 	status: GoalStatus;
 	dueAt: number | null;
+	areaId: number | null;
 	completedAt: number | null;
 	linkCount: number;
 	// Vínculos já concluídos (ações concluídas e projetos concluídos).
@@ -21,7 +22,7 @@ export type GoalLinks = {
 	projects: { id: number; name: string; state: string }[];
 };
 
-export type GoalInput = { name?: unknown; description?: unknown; dueAt?: number | null; status?: unknown };
+export type GoalInput = { name?: unknown; description?: unknown; dueAt?: number | null; status?: unknown; areaId?: number | null };
 
 const SELECT = `
 	SELECT g.*,
@@ -38,6 +39,7 @@ function map(r: Record<string, unknown>): Goal {
 		description: String(r.description),
 		status: String(r.status) as GoalStatus,
 		dueAt: r.due_at == null ? null : Number(r.due_at),
+		areaId: r.area_id == null ? null : Number(r.area_id),
 		completedAt: r.completed_at == null ? null : Number(r.completed_at),
 		linkCount: Number(r.link_count),
 		doneCount: Number(r.done_count)
@@ -70,9 +72,9 @@ export function createGoal(db: DatabaseSync, input: GoalInput): number {
 	return Number(
 		db
 			.prepare(
-				'INSERT INTO goals (name, description, due_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+				'INSERT INTO goals (name, description, due_at, area_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
 			)
-			.run(cleanName(input.name), String(input.description ?? '').trim(), input.dueAt ?? null, now, now)
+			.run(cleanName(input.name), String(input.description ?? '').trim(), input.dueAt ?? null, input.areaId ?? null, now, now)
 			.lastInsertRowid
 	);
 }
@@ -83,11 +85,12 @@ export function updateGoal(db: DatabaseSync, id: number, input: GoalInput): void
 	if (!(GOAL_STATUSES as readonly string[]).includes(status)) throw new GtdError('estado inválido');
 	const now = Date.now();
 	db.prepare(
-		`UPDATE goals SET name = ?, description = ?, due_at = ?, status = ?, completed_at = ?, updated_at = ? WHERE id = ?`
+		`UPDATE goals SET name = ?, description = ?, due_at = ?, area_id = ?, status = ?, completed_at = ?, updated_at = ? WHERE id = ?`
 	).run(
 		input.name === undefined ? cur.name : cleanName(input.name),
 		input.description === undefined ? cur.description : String(input.description).trim(),
 		input.dueAt === undefined ? cur.dueAt : input.dueAt,
+		input.areaId === undefined ? cur.areaId : input.areaId,
 		status,
 		status === 'achieved' ? (cur.completedAt ?? now) : null,
 		now,

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { postAction } from '#lib/client/actions.ts';
+	import TagInput from '#lib/components/TagInput.svelte';
 	import { toDateInput } from '#lib/gtd/core.ts';
 	import { useT } from '#lib/prefs-context.ts';
 	import type { PageProps } from './$types';
@@ -12,6 +13,11 @@
 	let itemPick = $state('');
 	let projectPick = $state('');
 	const g = $derived(data.goal);
+	const area = $derived(data.areas.find((a) => a.id === g.areaId));
+	let areaText = $state('');
+	$effect(() => {
+		if (editing) areaText = area ? `!${area.name}, ` : '';
+	});
 	const pct = $derived(g.linkCount ? Math.round((g.doneCount / g.linkCount) * 100) : 0);
 
 	async function save(e: SubmitEvent) {
@@ -44,6 +50,7 @@
 {#if !editing}
 	<div class="card">
 		<button class="title" onclick={() => (editing = true)}>🎯 {g.name}</button>
+		{#if area}<span class="chip" style:background={area.color ? `color-mix(in srgb, ${area.color} 22%, transparent)` : undefined} style:color={area.color ?? undefined}>!{area.name}</span>{/if}
 		{#if g.dueAt}<span class="muted small">{t('Prazo')}: {toDateInput(g.dueAt)}</span>{/if}
 		<button class="ghost" aria-label={t('Editar objetivo')} onclick={() => (editing = true)}>▾</button>
 	</div>
@@ -54,6 +61,7 @@
 		<input name="name" value={g.name} required autofocus aria-label={t('Nome')} />
 		<textarea name="description" rows="4" placeholder={t('Descrição')}>{g.description}</textarea>
 		<label>{t('Prazo')} <input type="date" name="dueAt" value={toDateInput(g.dueAt)} /></label>
+		<TagInput bind:value={areaText} areas={data.areas} contacts={data.contacts} tags={data.tags} areasOnly placeholder={t('Área')} />
 		<div class="actions">
 			<button type="submit">{t('Salvar')}</button>
 			<button type="button" class="ghost" onclick={() => (editing = false)}>{t('Cancelar')}</button>

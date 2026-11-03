@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { runMigrations } from '#lib/db/migrations.ts';
 import { captureItem, completeItem, deleteItemPermanently, trashItem } from './items.ts';
+import { createNamed } from './organize.ts';
 import { createProject } from './projects.ts';
 import { createGoal, getGoal, goalLinks, linkGoal, listGoals, setGoalsFor, updateGoal, deleteGoal } from './goals.ts';
 
@@ -55,5 +56,18 @@ describe('goals', () => {
 		updateGoal(db, g, { status: 'achieved' });
 		expect(listGoals(db, ['active'])).toHaveLength(0);
 		expect(getGoal(db, g).completedAt).not.toBeNull();
+	});
+});
+
+describe('área do objetivo', () => {
+	it('guarda, troca, remove e zera ao excluir a área', () => {
+		const db = memDb();
+		const area = createNamed(db, 'areas', 'Saúde');
+		const id = createGoal(db, { name: 'Correr', areaId: area });
+		expect(getGoal(db, id).areaId).toBe(area);
+		updateGoal(db, id, { name: 'Correr 10k' });
+		expect(getGoal(db, id).areaId).toBe(area);
+		db.prepare('DELETE FROM areas WHERE id = ?').run(area);
+		expect(getGoal(db, id).areaId).toBeNull();
 	});
 });

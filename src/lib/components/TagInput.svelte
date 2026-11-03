@@ -10,6 +10,7 @@
 		contacts,
 		tags,
 		allowContacts = true,
+		areasOnly = false,
 		disabled = false,
 		placeholder = ''
 	}: {
@@ -19,6 +20,7 @@
 		contacts: Entry[];
 		tags: Entry[];
 		allowContacts?: boolean;
+		areasOnly?: boolean;
 		disabled?: boolean;
 		placeholder?: string;
 	} = $props();
@@ -41,7 +43,9 @@
 		return { prefix, query: split.token.slice(prefix ? 1 : 0).trim() };
 	});
 	const options = $derived.by(() => {
-		const kinds: Kind[] = parsed.prefix
+		const kinds: Kind[] = areasOnly
+			? ['areas']
+			: parsed.prefix
 			? [BY_PREFIX[parsed.prefix]]
 			: (['areas', 'contacts', 'tags'] as Kind[]);
 		const pool: Record<Kind, Entry[]> = { areas, contacts: allowContacts ? contacts : [], tags };
@@ -49,7 +53,7 @@
 		const list = kinds.flatMap((k) =>
 			pool[k].filter((e) => e.name.toLowerCase().includes(q)).map((e) => ({ kind: k, name: e.name, create: false, color: e.color ?? null }))
 		);
-		const createKind: Kind = parsed.prefix ? BY_PREFIX[parsed.prefix] : 'tags';
+		const createKind: Kind = areasOnly ? 'areas' : parsed.prefix ? BY_PREFIX[parsed.prefix] : 'tags';
 		const exact = list.some((o) => o.name.toLowerCase() === q);
 		if (q && !exact && (createKind !== 'contacts' || allowContacts)) {
 			list.push({ kind: createKind, name: parsed.query, create: true, color: null });
@@ -107,7 +111,7 @@
 			{/each}
 		</ul>
 	{/if}
-	<small class="hint">{t('@ pessoa · ! área · # contexto')}</small>
+	<small class="hint">{areasOnly ? t('! área') : t('@ pessoa · ! área · # contexto')}</small>
 </div>
 
 <style>

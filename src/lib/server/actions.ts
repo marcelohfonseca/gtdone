@@ -162,6 +162,17 @@ function act(handler: Handler) {
 	};
 }
 
+// Objetivos aceitam só área: nomes sem prefixo também são tratados como área.
+function goalArea(db: DatabaseSync, csv: unknown): number | null {
+	const forced = String(csv ?? '')
+		.split(',')
+		.map((x) => x.trim().replace(/^[!@#]+/, ''))
+		.filter(Boolean)
+		.map((x) => `!${x}`)
+		.join(',');
+	return resolveTagField(db, forced, false).areaId;
+}
+
 function areaOfFilter(ev: RequestEvent): number | null {
 	const raw = ev.cookies.get(AREA_COOKIE);
 	return raw && /^[1-9]\d*$/.test(raw) ? Number(raw) : null;
@@ -290,7 +301,8 @@ export const appActions = {
 			id = createGoal(getDb(), {
 				name: fd.get('name'),
 				description: fd.get('description'),
-				dueAt: parseDateInput(fd.get('dueAt'))
+				dueAt: parseDateInput(fd.get('dueAt')),
+				areaId: fd.has('tags') ? goalArea(getDb(), fd.get('tags')) : null
 			});
 		} catch (e) {
 			if (e instanceof GtdError) return fail(e.status, { error: e.message });
@@ -303,6 +315,7 @@ export const appActions = {
 		if (has(fd, 'name')) input.name = fd.get('name');
 		if (has(fd, 'description')) input.description = fd.get('description');
 		if (has(fd, 'dueAt')) input.dueAt = parseDateInput(fd.get('dueAt'));
+		if (has(fd, 'tags')) input.areaId = goalArea(db, fd.get('tags'));
 		if (has(fd, 'status')) input.status = fd.get('status');
 		updateGoal(db, reqId(fd), input);
 	}),

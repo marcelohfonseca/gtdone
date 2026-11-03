@@ -302,6 +302,13 @@ const MIGRATIONS: Migration[] = [
 		up: (db) => {
 			db.exec('ALTER TABLE tags ADD COLUMN color TEXT; ALTER TABLE contacts ADD COLUMN color TEXT;');
 		}
+	},
+	{
+		version: 9,
+		name: 'goal-area',
+		up: (db) => {
+			db.exec('ALTER TABLE goals ADD COLUMN area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL;');
+		}
 	}
 ];
 

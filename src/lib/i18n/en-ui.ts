@@ -302,4 +302,5 @@ export const EN_UI: Record<string, string> = {
 	'Sem energia': 'No energy',
 	'Sem estimativa': 'No estimate',
 	Data: 'Date',
+	'! área': '! area',
 };

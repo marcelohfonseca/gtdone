@@ -37,6 +37,7 @@
 			{#each data[key] as g (g.id)}
 				<li>
 					<a href={`/goals/${g.id}`}>{g.name}</a>
+					{#if g.areaId != null}{@const a = data.areas.find((x) => x.id === g.areaId)}{#if a}<span class="area" style:--tint={a.color ?? 'var(--muted)'}>!{a.name}</span>{/if}{/if}
 					<span class="muted">{g.doneCount}/{g.linkCount}</span>
 				</li>
 			{/each}
@@ -62,6 +63,13 @@
 		gap: 0.6rem;
 		padding: 0.4rem 0;
 		border-bottom: 1px solid var(--border);
+	}
+	.area {
+		font-size: 0.75rem;
+		padding: 0.05rem 0.5rem;
+		border-radius: 1rem;
+		background: color-mix(in srgb, var(--tint) 22%, transparent);
+		color: var(--tint);
 	}
 	.error {
 		color: var(--danger);
