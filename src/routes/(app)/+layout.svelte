@@ -39,6 +39,14 @@
 		root.lang = data.prefs.lang;
 	});
 
+	// A cor da área selecionada sobrepõe o destaque geral.
+	$effect(() => {
+		const root = document.documentElement;
+		if (currentAreaColor) root.style.setProperty('--accent-pick', currentAreaColor);
+		else root.style.removeProperty('--accent-pick');
+		return () => root.style.removeProperty('--accent-pick');
+	});
+
 	$effect(() => {
 		void path;
 		selectedId = null;

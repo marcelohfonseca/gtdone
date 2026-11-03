@@ -62,4 +62,4 @@ The database defaults to `data/gtdone.db` and can be relocated with `GTDONE_DB_P
 ## Visualizações e cor de área
 
 - A barra lateral agrupa Calendário e Kanban (com seus quadros) em "Visualizações"; cada um some se a preferência `calendar`/`kanban` estiver `off` (dados preservados).
-- `areas.color` (migração 7, `#rrggbb` ou NULL) é editada em `/manage/areas` (`setAreaColor`); aparece como faixa à esquerda da linha do item (`ItemRow`) e como bolinha ao lado do seletor de área.
+- `areas.color` (migração 7, `#rrggbb` ou NULL) é editada em `/manage/areas` (`setAreaColor`); aparece como faixa à esquerda da linha do item (`ItemRow`) e como bolinha ao lado do seletor de área; com uma área selecionada, a cor dela sobrepõe o destaque geral (`--accent-pick` na raiz, em `(app)/+layout.svelte`).
