@@ -309,6 +309,26 @@ const MIGRATIONS: Migration[] = [
 		up: (db) => {
 			db.exec('ALTER TABLE goals ADD COLUMN area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL;');
 		}
+	},
+	{
+		version: 10,
+		name: 'items-fts',
+		up: (db) => {
+			db.exec(`
+				CREATE VIRTUAL TABLE items_fts USING fts5(title, notes, content='items', content_rowid='id', tokenize='trigram');
+				INSERT INTO items_fts(items_fts) VALUES ('rebuild');
+				CREATE TRIGGER items_fts_ai AFTER INSERT ON items BEGIN
+					INSERT INTO items_fts(rowid, title, notes) VALUES (new.id, new.title, new.notes);
+				END;
+				CREATE TRIGGER items_fts_ad AFTER DELETE ON items BEGIN
+					INSERT INTO items_fts(items_fts, rowid, title, notes) VALUES ('delete', old.id, old.title, old.notes);
+				END;
+				CREATE TRIGGER items_fts_au AFTER UPDATE OF title, notes ON items BEGIN
+					INSERT INTO items_fts(items_fts, rowid, title, notes) VALUES ('delete', old.id, old.title, old.notes);
+					INSERT INTO items_fts(rowid, title, notes) VALUES (new.id, new.title, new.notes);
+				END;
+			`);
+		}
 	}
 ];
 

@@ -31,6 +31,8 @@
 			params.get('project') && ['project', `${t('Projeto')}: ${nameOf(projects, params.get('project'))}`],
 			params.get('tag') && ['tag', `#${nameOf(tags, params.get('tag'))}`],
 			params.get('due') && ['due', t(DUE_LABEL[params.get('due') as 'week'])],
+			params.get('from') && ['from', `${t('Início de')} ${params.get('from')}`],
+			params.get('to') && ['to', `${t('Início até')} ${params.get('to')}`],
 			params.get('sort') && ['sort', t('Ordem: prazo')]
 		].filter(Boolean) as [string, string][]
 	);
@@ -81,6 +83,12 @@
 				<option value="overdue">{t('Atrasadas')}</option>
 				<option value="week">{t('Esta semana')}</option>
 			</select>
+		</label>
+		<label>{t('Início de')}
+			<input type="date" value={params.get('from') ?? ''} onchange={(e) => set('from', e.currentTarget.value)} />
+		</label>
+		<label>{t('Início até')}
+			<input type="date" value={params.get('to') ?? ''} onchange={(e) => set('to', e.currentTarget.value)} />
 		</label>
 		<label>{t('Ordenar')}
 			<select value={params.get('sort') ?? ''} onchange={(e) => set('sort', e.currentTarget.value)}>

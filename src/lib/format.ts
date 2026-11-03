@@ -50,6 +50,14 @@ export function extractLinks(text: string): string[] {
 	return [...new Set(found.map((u) => u.replace(/[.,;:!?)\]]+$/, '')))];
 }
 
+export function linkHost(url: string): string {
+	try {
+		return new URL(url).hostname.replace(/^www\./, '');
+	} catch {
+		return url;
+	}
+}
+
 const WEEKDAYS_LABEL = {
 	'pt-BR': ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'],
 	'en-US': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

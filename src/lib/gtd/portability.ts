@@ -39,7 +39,7 @@ function dataTables(db: DatabaseSync): string[] {
 		.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
 		.all()
 		.map((r) => String(r.name))
-		.filter((n) => !EXCLUDED_TABLES.has(n));
+		.filter((n) => !EXCLUDED_TABLES.has(n) && !n.startsWith('items_fts'));
 	const deps = new Map(
 		names.map((n) => [
 			n,

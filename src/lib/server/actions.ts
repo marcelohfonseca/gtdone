@@ -63,6 +63,14 @@ function positiveInt(v: string | null): number | null {
 	return v && Number.isInteger(n) && n > 0 ? n : null;
 }
 
+function dateParam(v: string | null): number | null {
+	try {
+		return v ? parseDateInput(v) : null;
+	} catch {
+		return null;
+	}
+}
+
 export function loadViewFilter(
 	cookies: Cookies,
 	url: URL,
@@ -85,6 +93,8 @@ export function loadViewFilter(
 		projectId: positiveInt(q.get('project')),
 		due: due === 'overdue' || due === 'week' ? due : null,
 		sort: q.get('sort') === 'due' ? 'due' : null,
+		startFrom: dateParam(q.get('from')),
+		startTo: dateParam(q.get('to')),
 		includeUnassigned: prefs?.unassignedUnderFilter === 'visible',
 		weekStart: prefs?.weekStart === 'sunday' ? 0 : 1
 	};

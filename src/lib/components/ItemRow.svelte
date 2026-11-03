@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { postAction } from '#lib/client/actions.ts';
 	import { LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
-	import { dueInfo, minutesLabel, recurrenceLabel } from '#lib/format.ts';
+	import { dueInfo, extractLinks, linkHost, minutesLabel, recurrenceLabel } from '#lib/format.ts';
 	import { usePrefs, useT } from '#lib/prefs-context.ts';
 	import type { Item } from '#lib/gtd/items.ts';
 	import ItemEditor from './ItemEditor.svelte';
@@ -90,6 +90,9 @@
 		{item.title}
 		{#if item.notes}<span class="muted" title={t('Tem notas')}> ✎</span>{/if}
 	</button>
+	{#each extractLinks(item.notes).slice(0, 3) as url (url)}
+		<a class="muted small" href={url} target="_blank" rel="noopener noreferrer" title={url}>🔗 {linkHost(url)}</a>
+	{/each}
 	{#if item.checklist.length}
 		<span class="muted small" title={t('Checklist')}>☑ {checkDone}/{item.checklist.length}</span>
 	{/if}

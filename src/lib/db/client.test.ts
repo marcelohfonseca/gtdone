@@ -13,7 +13,7 @@ describe('openDatabase', () => {
 	it('aplica as migrações e define a versão atual do schema', () => {
 		const db = freshDb();
 		try {
-			expect(currentVersion(db)).toBe(9);
+			expect(currentVersion(db)).toBe(10);
 		} finally {
 			closeDatabase(db);
 		}
@@ -25,11 +25,11 @@ describe('openDatabase', () => {
 		closeDatabase(db);
 		const reopened = openDatabase(path);
 		try {
-			expect(currentVersion(reopened)).toBe(9);
+			expect(currentVersion(reopened)).toBe(10);
 			const rows = reopened
 				.prepare('SELECT COUNT(*) AS c FROM schema_migrations')
 				.get() as { c: number };
-			expect(Number(rows.c)).toBe(9);
+			expect(Number(rows.c)).toBe(10);
 		} finally {
 			closeDatabase(reopened);
 		}

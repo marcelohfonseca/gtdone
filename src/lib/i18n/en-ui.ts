@@ -303,4 +303,6 @@ export const EN_UI: Record<string, string> = {
 	'Sem estimativa': 'No estimate',
 	Data: 'Date',
 	'! área': '! area',
+	'Início de': 'Start from',
+	'Início até': 'Start until',
 };

@@ -410,3 +410,41 @@ describe('projeto na lixeira e edição em lote', () => {
 		expect(db.prepare('SELECT COUNT(*) n FROM projects').get()!.n).toBe(0);
 	});
 });
+
+describe('pendências adiadas', () => {
+	it('busca FTS (trecho no meio da palavra) e consulta curta', () => {
+		const db = memDb();
+		const a = captureItem(db, { title: 'Comprar leite integral' }, TODAY);
+		updateItem(db, a, { notes: 'ver https://exemplo.com/x' }, TODAY);
+		captureItem(db, { title: 'Outro' }, TODAY);
+		expect(searchItems(db, 'leit').map((i) => i.id)).toEqual([a]);
+		expect(searchItems(db, 'EXEMPLO').map((i) => i.id)).toEqual([a]);
+		expect(searchItems(db, 'ou').length).toBe(1);
+		updateItem(db, a, { title: 'Pagar conta' }, TODAY);
+		expect(searchItems(db, 'leite')).toEqual([]);
+		trashItem(db, a);
+		deleteItemPermanently(db, a);
+		expect(db.prepare("SELECT COUNT(*) n FROM items_fts WHERE items_fts MATCH 'conta'").get()!.n).toBe(0);
+		expect(searchItems(db, 'conta')).toEqual([]);
+	});
+
+	it('filtra por intervalo de início', () => {
+		const db = memDb();
+		const day = 86_400_000;
+		const a = captureItem(db, { title: 'a', state: 'next', startsAt: TODAY - day }, TODAY);
+		const b = captureItem(db, { title: 'b', state: 'next', startsAt: TODAY - 3 * day }, TODAY);
+		captureItem(db, { title: 'c', state: 'next' }, TODAY);
+		const ids = (f: object) => listItems(db, 'next', { area: null, tagId: null, ...f }, TODAY).map((i) => i.id);
+		expect(ids({ startFrom: TODAY - 2 * day })).toEqual([a]);
+		expect(ids({ startTo: TODAY - 2 * day })).toEqual([b]);
+	});
+
+	it('retenção também apaga projetos concluídos antigos', () => {
+		const db = memDb();
+		const p = createProject(db, { name: 'velho' }, TODAY);
+		completeProject(db, p);
+		db.prepare('UPDATE projects SET completed_at = 1 WHERE id = ?').run(p);
+		purgeLogbook(db, 30);
+		expect(db.prepare('SELECT COUNT(*) n FROM projects').get()!.n).toBe(0);
+	});
+});

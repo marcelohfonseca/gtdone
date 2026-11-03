@@ -24,6 +24,9 @@ export type ViewFilter = {
 	projectId?: number | null;
 	due?: 'overdue' | 'week' | null;
 	sort?: 'due' | null;
+	// Intervalo da data de início (UTC meia-noite, inclusivo); itens sem início ficam de fora.
+	startFrom?: number | null;
+	startTo?: number | null;
 	// Preferências: itens sem área continuam visíveis sob um filtro de área; início da semana.
 	includeUnassigned?: boolean;
 	weekStart?: 0 | 1;
@@ -493,11 +496,16 @@ export function emptyTrash(db: DatabaseSync): number {
 // Remove do Diário o que foi concluído há mais de `days` dias (0 = guardar para sempre).
 export function purgeLogbook(db: DatabaseSync, days: number, now = Date.now()): number {
 	if (!(days > 0)) return 0;
-	return Number(
-		db
-			.prepare("DELETE FROM items WHERE state = 'completed' AND completed_at < ?")
-			.run(now - days * 86_400_000).changes
+	const cutoff = now - days * 86_400_000;
+	const removed = Number(
+		db.prepare("DELETE FROM items WHERE state = 'completed' AND completed_at < ?").run(cutoff).changes
 	);
+	// Projetos concluídos antigos saem junto, desde que nenhuma ação ainda aponte para eles.
+	db.prepare(
+		`DELETE FROM projects WHERE state = 'completed' AND completed_at < ?
+		AND NOT EXISTS (SELECT 1 FROM items i WHERE i.project_id = projects.id)`
+	).run(cutoff);
+	return removed;
 }
 
 export const BULK_OPS = [
@@ -583,6 +591,14 @@ function filterSql(filter: ViewFilter, params: SQLInputValue[], today: number): 
 		const dow = new Date(today).getUTCDay();
 		const toEnd = filter.weekStart === 0 ? 6 - dow : (7 - dow) % 7;
 		params.push(today + toEnd * 86_400_000);
+	}
+	if (filter.startFrom != null) {
+		sql += ' AND i.starts_at IS NOT NULL AND i.starts_at >= ?';
+		params.push(filter.startFrom);
+	}
+	if (filter.startTo != null) {
+		sql += ' AND i.starts_at IS NOT NULL AND i.starts_at <= ?';
+		params.push(filter.startTo);
 	}
 	if (filter.area === 'none') sql += ' AND COALESCE(i.area_id, p.area_id) IS NULL';
 	else if (filter.area != null) {
@@ -731,15 +747,21 @@ export function searchItems(db: DatabaseSync, query: string): Item[] {
 	const q = query.trim();
 	if (!q) return [];
 	const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+	// FTS5 (trigram) cobre trechos de 3+ caracteres; consultas curtas usam LIKE.
+	const textMatch =
+		q.length >= 3
+			? 'i.id IN (SELECT rowid FROM items_fts WHERE items_fts MATCH ?2)'
+			: "(i.title LIKE ?1 ESCAPE '\\' OR i.notes LIKE ?1 ESCAPE '\\')";
+	const args: SQLInputValue[] = q.length >= 3 ? [like, `"${q.replace(/"/g, '""')}"`] : [like];
 	return db
 		.prepare(
-			`${SELECT} WHERE (i.title LIKE ?1 ESCAPE '\\' OR i.notes LIKE ?1 ESCAPE '\\'
+			`${SELECT} WHERE (${textMatch}
 				OR p.name LIKE ?1 ESCAPE '\\'
 				OR EXISTS (SELECT 1 FROM item_tags x JOIN tags t ON t.id = x.tag_id
 					WHERE x.item_id = i.id AND t.name LIKE ?1 ESCAPE '\\'))
 			AND i.state != 'trash' ORDER BY i.state = 'completed', i.updated_at DESC LIMIT 200`
 		)
-		.all(like)
+		.all(...args)
 		.map(mapItem);
 }
 

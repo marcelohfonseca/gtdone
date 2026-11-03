@@ -96,7 +96,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 - **Implementado:** CRUD de áreas, tags e contatos (`/manage/<tipo>`); área, tags, contato delegado, tempo e energia no item; início e prazo independentes (Scheduled vira Next na data); reordenação persistente; referências distintas; estado do projeto (ativo/Later/Scheduled/Someday) com data própria; seletor de área global (cookie) e filtro por tag.
 - **Também implementado:** Quick Add com prefixos `!área`, `@pessoa`, `#contexto`; conversão de tipo de tag (Pessoa↔Contexto) no diálogo de tags.
-- **Adiado:** filtros por tempo/energia (Fase 3), preferência para ocultar itens sem área, modos de densidade, execução sequencial/paralela de projetos (Fase 4), exclusão permanente e retenção do Logbook.
+- **Adiado:** nada pendente (filtros por tempo/energia, densidade, execução sequencial, exclusão permanente e retenção do Logbook foram implementados depois).
 - Criar/administrar tags e contextos e associá-los a itens e projetos; criar áreas e contatos com gerenciamento e seleção a partir dos detalhes.
 - Implementar associação de área, tags e contato delegado no item; o seletor de área global filtra listas e pode manter itens sem área visíveis conforme preferência.
 - Registrar tempo estimado e energia, com filtros e apresentação no detalhe/linha do item.
@@ -111,7 +111,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 ### Fase 3 — Engajar, Focus, filtros e busca
 
 - **Implementado:** Focus = estrela (manual) + próximas vencidas ou com prazo hoje (automático), agrupado em "Vencidas e para hoje", "Em foco" e "Algum dia — vale revisar" sem alterar o estado original; filtros combináveis na URL (energia, tempo disponível, contato, projeto, tag, prazo, área) com chips removíveis e "Limpar"; ordenação por prazo; busca por título, notas, projeto e tag (LIKE; itens sem estimativa de tempo continuam visíveis no filtro de tempo); contagens e badge de atrasadas na barra lateral; "ações possíveis" via filtros de energia/tempo/tag na lista Próximas.
-- **Adiado:** FTS5 (LIKE basta no volume atual), filtro por intervalo de início, modos de densidade (Fase 5).
+- **Implementado depois:** busca FTS5 com tokenizador trigram (migração 10; consultas com menos de 3 caracteres usam LIKE) e filtro por intervalo da data de início (`?from=`/`?to=`).
 - Implementar Focus com marcação manual e itens relevantes por regras explícitas de data; distinguir inclusão manual da relevância automática e permitir remover da Focus.
 - Organizar a visão de Focus por grupos úteis, como próximas ações e itens Someday que merecem revisão, sem alterar o estado original.
 - Implementar filtros combináveis por lista, área, tag/contexto, contato, energia, tempo, início, deadline e projeto; mostrar filtros ativos como chips removíveis.
@@ -126,7 +126,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 - **Implementado:** lista de projetos (`/projects`) por estado com destaque "sem próxima ação"; detalhe com ações agrupadas por estado (Próximas ações, Aguardando, Depois…, Concluídas); modo sequencial/paralelo por projeto (migração v4; no sequencial só a primeira ação aberta aparece em Próximas e Foco); concluir e reabrir projetos (Diário lista projetos concluídos); revisão semanal guiada em `/review` (Inbox, projetos, Próximas, Aguardando, Agendadas, Algum dia); retenção do Diário configurável em `/settings` (0 = guardar tudo); exclusão definitiva individual e "Esvaziar lixeira" com confirmação; seleção múltipla (concluir, mover, tag, Foco, excluir, restaurar).
 - **Implementado depois:** enviar projeto à lixeira (leva as ações abertas; restaurar e excluir definitivamente na Lixeira e na página do projeto; "Esvaziar lixeira" inclui projetos) e edição em lote de prazo, início, energia e tempo.
-- **Adiado:** retenção também para projetos concluídos.
+- **Implementado depois:** a retenção do Diário também apaga projetos concluídos antigos sem ações vinculadas.
 - Exibir lista de projetos e detalhe com resultado desejado, notas, tags/área e ações agrupadas por estado, incluindo a seção de próxima ação.
 - Implementar modo sequencial (só a próxima ação fica disponível) e paralelo (ações podem avançar independentemente); persistir o modo por projeto.
 - Permitir encaminhar projetos para Later, Scheduled e Someday e reativá-los sem perder ações ou histórico.
@@ -142,7 +142,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 ### Fase 5 — Recursos avançados e fluidez
 
 - **Implementado:** checklists por item (editor + progresso ☑ n/m na linha); recorrência diária/semanal/mensal/anual a cada N (ao concluir, a próxima ocorrência é criada uma única vez e a regra migra para ela; exige data); links http(s) nas notas listados no editor; duplicar item (menu e `D`); atalhos de teclado (`1–9/0` navegação, `J/K`, `Enter`, `C`, `*`, `T`, `D`, `Delete`, `?` ajuda; lista também em Preferências › Atalhos); página Referência (`/reference`) com criação, busca e conversão; Preferências com 5 abas + Atalhos, salvas automaticamente na tabela `settings` (`pref.*`): tema, cor de destaque, densidade, formato de data, início da semana, prazos relativos/absolutos, entrada rápida, concluídos ao fim, contadores, posição do Foco, Depois/Aguardando, projetos sequenciais na barra, atribuir área ao sair da Entrada, itens sem área sob filtro, retenção do Diário.
-- **Adiado:** outros idiomas (UI só em português), links clicáveis dentro da própria linha de notas, (recorrência por dias da semana, “após conclusão” e fim por data/contagem já implementados: `unit:every;wd=1,3;after=1;until=AAAA-MM-DD;count=N`).
+- **Implementado depois:** inglês (en-US) e links clicáveis (🔗 domínio) na linha do item; (recorrência por dias da semana, “após conclusão” e fim por data/contagem já implementados: `unit:every;wd=1,3;after=1;until=AAAA-MM-DD;count=N`).
 
 - Adicionar checklists vinculadas a tarefas e outros itens compatíveis.
 - Implementar tarefas recorrentes com geração previsível e sem duplicação acidental.
