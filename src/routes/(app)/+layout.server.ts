@@ -39,6 +39,7 @@ export const load: LayoutServerLoad = ({ cookies, url }) => {
 			openCount: p.openCount,
 			sequential: p.executionMode === 'sequential'
 		})),
+		inactiveProjects: listProjects(db, ['later'], filter).map((p) => ({ id: p.id, name: p.name })),
 		projects: listProjects(db, ['active', 'later', 'scheduled', 'someday']).map((p) => ({
 			id: p.id,
 			name: p.name

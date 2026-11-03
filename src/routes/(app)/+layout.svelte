@@ -67,6 +67,14 @@
 			(l) => !((l === 'later' && data.prefs.later === 'off') || (l === 'waiting' && data.prefs.waiting === 'off'))
 		)
 	);
+	let showInactive = $state(false);
+	$effect(() => {
+		showInactive = localStorage.getItem('gtdone.showInactive') === '1';
+	});
+	function toggleInactive() {
+		showInactive = !showInactive;
+		localStorage.setItem('gtdone.showInactive', showInactive ? '1' : '0');
+	}
 	const currentAreaColor = $derived(data.areas.find((a) => a.id === data.filter.area)?.color ?? null);
 	const sidebarProjects = $derived(
 		data.sidebarProjects.filter((p) => data.prefs.sequentialSidebar === 'on' || !p.sequential)
@@ -274,8 +282,21 @@
 					{#if p.openCount}<span class="count">{p.openCount}</span>{/if}
 				</a>
 			{:else}
-				<span class="hint">{t('Nenhum projeto ativo')}</span>
+				{#if !data.inactiveProjects.length || !showInactive}<span class="hint">{t('Nenhum projeto ativo')}</span>{/if}
 			{/each}
+			{#if showInactive}
+				{#each data.inactiveProjects as p (p.id)}
+					<a class="inactive" href={`/projects/${p.id}`} class:active={path === `/projects/${p.id}`} data-drop={`project:${p.id}`}>
+						<span class="icon">▹</span>
+						<span class="label">{p.name}</span>
+					</a>
+				{/each}
+			{/if}
+			{#if data.inactiveProjects.length}
+				<button class="toggle-inactive" onclick={toggleInactive}>
+					{showInactive ? t('ocultar projetos inativos') : t('mostrar projetos inativos')}
+				</button>
+			{/if}
 			<h4><a class="h4link" href="/goals">{t('Objetivos')}</a></h4>
 			{#each data.goals as g (g.id)}
 				<a href={`/goals/${g.id}`} class:active={path === `/goals/${g.id}`}>
@@ -616,6 +637,20 @@
 		height: 0.8rem;
 		border-radius: 50%;
 		flex: none;
+	}
+	nav a.inactive {
+		opacity: 0.65;
+	}
+	.toggle-inactive {
+		all: unset;
+		cursor: pointer;
+		font-size: 0.75rem;
+		padding: 0.2rem 0.75rem;
+		color: var(--muted);
+	}
+	.toggle-inactive:hover {
+		color: var(--text);
+		text-decoration: underline;
 	}
 	nav a.sub {
 		padding-left: 2.3rem;

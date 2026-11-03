@@ -38,16 +38,20 @@
 
 <FilterBar tags={data.tags} contacts={data.contacts} projects={data.projects} />
 
-{#if data.groupedProjects.length}
-	<h3 class="group">{t('Projetos')}</h3>
-	<ul class="projects">
-		{#each data.groupedProjects as p (p.id)}
-			<li><a href={`/projects/${p.id}`}>{p.name}</a> <span class="muted">{p.openCount} {t('ações')}</span>
-				{#if data.list === 'logbook'}<button class="ghost" onclick={() => reopen(p.id)}>{t('Reabrir')}</button>{/if}
-			</li>
-		{/each}
-	</ul>
-{/if}
+{#snippet projectGroup()}
+	{#if data.groupedProjects.length}
+		<h3 class="group">{data.list === 'later' ? t('Projetos (inativos)') : t('Projetos')}</h3>
+		<ul class="projects">
+			{#each data.groupedProjects as p (p.id)}
+				<li><span class="actions-badge">{p.openCount} {p.openCount === 1 ? t('ação') : t('ações')}</span> <a href={`/projects/${p.id}`}>{p.name}</a>
+					{#if data.list === 'logbook'}<button class="ghost" onclick={() => reopen(p.id)}>{t('Reabrir')}</button>{/if}
+				</li>
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
+{#if data.list !== 'later'}{@render projectGroup()}{/if}
 
 {#if error}<p class="error">{t.msg(error)}</p>{/if}
 {#if data.list === 'trash' && data.items.length}
@@ -70,13 +74,22 @@
 	emptyText={data.meta.empty}
 />
 
+{#if data.list === 'later'}{@render projectGroup()}{/if}
+
 <style>
+	.actions-badge {
+		font-size: 0.75rem;
+		padding: 0.05rem 0.4rem;
+		border-radius: 4px;
+		background: var(--surface-2);
+		color: var(--muted);
+		white-space: nowrap;
+	}
 	h1 {
 		margin: 0;
 		font-size: 1.5rem;
 	}
-	.subtitle,
-	.muted {
+	.subtitle {
 		color: var(--muted);
 		font-size: 0.9rem;
 	}
@@ -102,6 +115,7 @@
 		padding: 0.4rem 0;
 		border-bottom: 1px solid var(--border);
 		display: flex;
-		justify-content: space-between;
+		gap: 0.6rem;
+		align-items: center;
 	}
 </style>
