@@ -3,6 +3,7 @@
 	import { toDateInput, LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
 	import { TIME_OPTIONS, extractLinks } from '#lib/format.ts';
 	import type { Item } from '#lib/gtd/items.ts';
+	import TagInput from './TagInput.svelte';
 	import GoalPicker from './GoalPicker.svelte';
 	import { useT } from '#lib/prefs-context.ts';
 
@@ -29,7 +30,23 @@
 	let newStep = $state('');
 	const links = $derived(extractLinks(item.notes));
 	let busy = $state(false);
-	const areaName = $derived(areas.find((a) => a.id === item.areaId)?.name);
+	// svelte-ignore state_referenced_locally
+	const areaName = areas.find((a) => a.id === item.areaId)?.name;
+	// svelte-ignore state_referenced_locally
+	let tagText = $state(
+		[
+			...(areaName ? [`!${areaName}`] : []),
+			...(item.contactId != null ? [`@${contacts.find((c) => c.id === item.contactId)?.name ?? ''}`] : []),
+			...item.tags.map((x) => `#${x}`)
+		]
+			.filter((x) => x.length > 1)
+			.join(', ') + (areaName || item.contactId != null || item.tags.length ? ', ' : '')
+	);
+	function setContactToken(name?: string) {
+		const parts = tagText.split(',').map((p) => p.trim()).filter((p) => p && !p.startsWith('@'));
+		if (name) parts.push(`@${name}`);
+		tagText = parts.length ? parts.join(', ') + ', ' : '';
+	}
 	const readOnly = $derived(item.state === 'trash' || item.state === 'completed');
 
 	// Menu de estado/reagendamento: os valores vivem em campos ocultos enviados com o formulário.
@@ -58,7 +75,10 @@
 
 	function pickState(next: string) {
 		st = next;
-		if (next !== 'waiting') contactId = '';
+		if (next !== 'waiting') {
+			contactId = '';
+			setContactToken();
+		}
 		if ((next === 'next' || next === 'later') && startsAt > todayStr) startsAt = '';
 		menuOpen = false;
 		sub = '';
@@ -66,6 +86,7 @@
 	function pickContact(id: string) {
 		st = 'waiting';
 		contactId = id;
+		setContactToken(contacts.find((c) => String(c.id) === id)?.name);
 		menuOpen = false;
 		sub = '';
 	}
@@ -114,7 +135,7 @@
 	<div class="cols">
 	<div class="main">
 	<input name="title" value={item.title} required aria-label={t('Título')} disabled={readOnly} />
-	<input name="tags" list="tag-options" value={[...(areaName ? [areaName] : []), ...item.tags].join(', ')} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} aria-label={t('Tags')} disabled={readOnly} />
+	<TagInput bind:value={tagText} {areas} {contacts} {tags} disabled={readOnly} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} />
 	<textarea name="notes" rows="6" placeholder={t('Notas')} disabled={readOnly}>{item.notes}</textarea>
 	{#if links.length}
 		<p class="links">
@@ -253,10 +274,6 @@
 		</label>
 		<GoalPicker kind="item" id={item.id} disabled={readOnly} />
 	</div>
-	<datalist id="tag-options">
-		{#each areas as a (a.id)}<option value={a.name}></option>{/each}
-		{#each tags as tg (tg.id)}<option value={tg.name}></option>{/each}
-	</datalist>
 	</div>
 </form>
 

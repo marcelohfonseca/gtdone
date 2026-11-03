@@ -49,7 +49,7 @@ import {
 	updateBoard
 } from '#lib/gtd/kanban.ts';
 import { loadPreferences, type Preferences } from '#lib/gtd/preferences.ts';
-import { listNamed, splitAreaFromTags } from '#lib/gtd/organize.ts';
+import { listNamed, resolveTagField } from '#lib/gtd/organize.ts';
 import { parseQuickAdd } from '#lib/nlp/quick-add.ts';
 import { getDb } from './db.ts';
 
@@ -179,9 +179,10 @@ export const appActions = {
 	capture: act((db, fd, ev, today) => {
 		const input = readItemInput(fd);
 		if (typeof input.tags === 'string') {
-			const split = splitAreaFromTags(db, input.tags);
+			const split = resolveTagField(db, input.tags);
 			input.tags = split.tags;
 			if (input.areaId === undefined && split.areaId !== null) input.areaId = split.areaId;
+			if (input.contactId === undefined && split.contactId !== null) input.contactId = split.contactId;
 		}
 		if (fd.get('quick') === '1') applyQuickAdd(db, input, today);
 		if (input.areaId === undefined) input.areaId = areaOfFilter(ev);
@@ -189,9 +190,10 @@ export const appActions = {
 	}),
 	edit: act((db, fd, _ev, today) => {
 		const input = readItemInput(fd);
-		if (has(fd, 'tags') && !has(fd, 'areaId')) {
-			const split = splitAreaFromTags(db, fd.get('tags'));
+		if (has(fd, 'tags')) {
+			const split = resolveTagField(db, fd.get('tags'));
 			input.areaId = split.areaId;
+			input.contactId = split.contactId;
 			input.tags = split.tags;
 		}
 		updateItem(db, reqId(fd), input, today);
@@ -253,7 +255,7 @@ export const appActions = {
 		const id = reqId(fd);
 		if (fd.get('complete') === '1') return completeProject(db, id);
 		if (fd.get('reopen') === '1') return reopenProject(db, id);
-		const split = has(fd, 'tags') && !has(fd, 'areaId') ? splitAreaFromTags(db, fd.get('tags')) : null;
+		const split = has(fd, 'tags') ? resolveTagField(db, fd.get('tags'), false) : null;
 		updateProject(
 			db,
 			id,

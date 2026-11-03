@@ -25,7 +25,7 @@ import {
 } from './items.ts';
 import { loadPreferences, savePreferences } from './preferences.ts';
 import { createProject, getProject, listProjects, projectFromItem, reopenProject, completeProject, updateProject } from './projects.ts';
-import { createNamed, deleteNamed, listNamed, parseTagNames, setNamedColor, splitAreaFromTags } from './organize.ts';
+import { createNamed, deleteNamed, listNamed, parseTagNames, setNamedColor, resolveTagField } from './organize.ts';
 import { GtdError, parseDateInput, advanceDate, parseRecurrence } from './core.ts';
 
 const TODAY = Date.UTC(2025, 5, 10);
@@ -347,7 +347,11 @@ describe('cor da área', () => {
 		setNamedColor(db, 'contacts', contact, '#e5484d');
 		expect(listNamed(db, 'contacts')[0].color).toBe('#e5484d');
 		const area = createNamed(db, 'areas', 'Trabalho');
-		expect(splitAreaFromTags(db, 'casa, trabalho, #pc')).toEqual({ areaId: area, tags: 'casa,pc' });
-		expect(splitAreaFromTags(db, 'casa')).toEqual({ areaId: null, tags: 'casa' });
+		expect(resolveTagField(db, 'casa, trabalho, #pc')).toEqual({ areaId: area, contactId: null, tags: 'casa,pc' });
+		const r = resolveTagField(db, '!Novo, @Bia, #ctx, ctx');
+		expect(r.tags).toBe('ctx');
+		expect(listNamed(db, 'areas').map((a) => a.name)).toContain('Novo');
+		expect(listNamed(db, 'contacts').map((c) => c.name)).toContain('Bia');
+		expect(resolveTagField(db, '@Bia, !Trabalho', false)).toEqual({ areaId: area, contactId: null, tags: '' });
 	});
 });

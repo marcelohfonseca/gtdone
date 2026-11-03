@@ -64,6 +64,7 @@
 </div>
 
 <button class="add" onclick={add}>⊕ {t(ADD[tab])}</button>
+<p class="tip">{t('Dica: nos campos de tags, digite @ para pessoas, ! para áreas e # para contextos. Nomes novos são criados automaticamente.')}</p>
 {#if error}<p class="error">{t.msg(error)}</p>{/if}
 
 <ul>
@@ -120,7 +121,12 @@
 		border-bottom-color: var(--text);
 	}
 	.add {
-		margin-bottom: 0.75rem;
+		margin-bottom: 0.5rem;
+	}
+	.tip {
+		margin: 0 0 0.75rem;
+		font-size: 0.78rem;
+		color: var(--muted);
 	}
 	ul {
 		list-style: none;

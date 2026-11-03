@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ItemList from '#lib/components/ItemList.svelte';
+	import TagInput from '#lib/components/TagInput.svelte';
 	import GoalPicker from '#lib/components/GoalPicker.svelte';
 	import RapidEntry from '#lib/components/RapidEntry.svelte';
 	import { postAction } from '#lib/client/actions.ts';
@@ -15,6 +16,10 @@
 	let editing = $state(false);
 	const p = $derived(data.project);
 	const areaName = $derived(data.areas.find((a) => a.id === p.areaId)?.name);
+	let tagText = $state('');
+	$effect(() => {
+		if (editing) tagText = [...(areaName ? [`!${areaName}`] : []), ...p.tags.map((x) => `#${x}`)].join(', ') + (areaName || p.tags.length ? ', ' : '');
+	});
 	const closed = $derived(p.state === 'completed' || p.state === 'trash');
 
 	const STATES = [
@@ -64,7 +69,7 @@
 				<!-- svelte-ignore a11y_autofocus -->
 				<input name="name" value={p.name} required autofocus aria-label={t('Nome')} />
 				<input name="desiredOutcome" value={p.desiredOutcome} placeholder={t('Resultado desejado')} />
-				<input name="tags" list="tag-options" value={[...(areaName ? [areaName] : []), ...p.tags].join(', ')} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} aria-label={t('Tags')} />
+				<TagInput bind:value={tagText} areas={data.areas} contacts={data.contacts} tags={data.tags} allowContacts={false} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} />
 				<textarea name="notes" rows="6" placeholder={t('Notas')}>{p.notes}</textarea>
 				{#if error}<p class="error">{t.msg(error)}</p>{/if}
 				<div class="actions">
@@ -89,10 +94,6 @@
 				</label>
 				<GoalPicker kind="project" id={p.id} />
 			</div>
-			<datalist id="tag-options">
-				{#each data.areas as a (a.id)}<option value={a.name}></option>{/each}
-				{#each data.tags as tg (tg.id)}<option value={tg.name}></option>{/each}
-			</datalist>
 		</form>
 	{/if}
 	{#if p.stalled}<p class="warn">{t('Projeto ativo sem próxima ação — defina a próxima ação abaixo.')}</p>{/if}

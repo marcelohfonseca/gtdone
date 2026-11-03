@@ -77,17 +77,30 @@ export function parseTagNames(csv: unknown): string[] {
 	return [...seen.values()];
 }
 
-// Áreas são escolhidas pelo campo de tags: um nome que coincide com uma área vira a área do item.
-export function splitAreaFromTags(db: DatabaseSync, csv: unknown): { areaId: number | null; tags: string } {
-	const areas = listNamed(db, 'areas');
-	let areaId: number | null = null;
-	const rest: string[] = [];
-	for (const name of parseTagNames(csv)) {
-		const area = areas.find((a) => a.name.toLowerCase() === name.toLowerCase());
-		if (area && areaId === null) areaId = area.id;
-		else if (!area) rest.push(name);
+export type TagField = { areaId: number | null; contactId: number | null; tags: string };
+
+// Campo único de tags: "!área", "@pessoa", "#contexto"; sem prefixo vale o cadastro existente
+// (área, pessoa, contexto) ou cria um contexto. Nomes que não existem são criados.
+export function resolveTagField(db: DatabaseSync, csv: unknown, allowContacts = true): TagField {
+	const out: TagField = { areaId: null, contactId: null, tags: '' };
+	const contexts: string[] = [];
+	const find = (kind: NamedKind, name: string) =>
+		listNamed(db, kind).find((e) => e.name.toLowerCase() === name.toLowerCase());
+	const ensure = (kind: NamedKind, name: string) => find(kind, name)?.id ?? createNamed(db, kind, name);
+	for (const raw of String(csv ?? '').split(',')) {
+		const token = raw.trim();
+		const prefix = /^[!@#]/.test(token) ? token[0] : '';
+		const name = token.replace(/^[!@#]+/, '').trim();
+		if (!name) continue;
+		const kind: NamedKind | null =
+			prefix === '!' ? 'areas' : prefix === '@' ? 'contacts' : prefix === '#' ? 'tags' : find('areas', name) ? 'areas' : allowContacts && find('contacts', name) ? 'contacts' : 'tags';
+		if (kind === 'areas') out.areaId ??= ensure('areas', name);
+		else if (kind === 'contacts') {
+			if (allowContacts) out.contactId ??= ensure('contacts', name);
+		} else if (!contexts.some((c) => c.toLowerCase() === name.toLowerCase())) contexts.push(name);
 	}
-	return { areaId, tags: rest.join(',') };
+	out.tags = contexts.join(',');
+	return out;
 }
 
 export function ensureTagIds(db: DatabaseSync, names: string[]): number[] {
