@@ -25,7 +25,7 @@ import {
 } from './items.ts';
 import { loadPreferences, savePreferences } from './preferences.ts';
 import { createProject, getProject, listProjects, projectFromItem, reopenProject, completeProject, updateProject } from './projects.ts';
-import { createNamed, deleteNamed, parseTagNames } from './organize.ts';
+import { createNamed, deleteNamed, listNamed, parseTagNames, setAreaColor } from './organize.ts';
 import { GtdError, parseDateInput, advanceDate, parseRecurrence } from './core.ts';
 
 const TODAY = Date.UTC(2025, 5, 10);
@@ -321,5 +321,19 @@ describe('fase 5', () => {
 		captureItem(db, { title: 'Sem área', state: 'next' }, TODAY);
 		expect(listItems(db, 'next', { area, tagId: null }, TODAY)).toHaveLength(0);
 		expect(listItems(db, 'next', { area, tagId: null, includeUnassigned: true }, TODAY)).toHaveLength(1);
+	});
+});
+
+describe('cor da área', () => {
+	it('salva, limpa e valida a cor', () => {
+		const db = new DatabaseSync(':memory:');
+		runMigrations(db);
+		const id = createNamed(db, 'areas', 'Trabalho');
+		expect(listNamed(db, 'areas')[0].color).toBeNull();
+		setAreaColor(db, id, '#FF8800');
+		expect(listNamed(db, 'areas')[0].color).toBe('#ff8800');
+		expect(() => setAreaColor(db, id, 'vermelho')).toThrow(GtdError);
+		setAreaColor(db, id, '');
+		expect(listNamed(db, 'areas')[0].color).toBeNull();
 	});
 });

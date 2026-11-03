@@ -58,3 +58,8 @@ The database defaults to `data/gtdone.db` and can be relocated with `GTDONE_DB_P
 ## Editor de item
 
 - `ItemEditor.svelte`: coluna direita com Tempo, Energia, Prazo e um menu único "Estado" (Reagendar: Data de início…/Repetir…; Estado: Caixa de entrada, Próximas, Depois, Algum dia, Aguardando ▸ contatos/Novo contato…, Agendadas ▸ data). O menu escreve em campos ocultos (`state`, `startsAt`, `contactId`) e em `recUnit`/`recEvery`; o servidor continua resolvendo o estado via `resolveState`.
+
+## Visualizações e cor de área
+
+- A barra lateral agrupa Calendário e Kanban (com seus quadros) em "Visualizações"; cada um some se a preferência `calendar`/`kanban` estiver `off` (dados preservados).
+- `areas.color` (migração 7, `#rrggbb` ou NULL) é editada em `/manage/areas` (`setAreaColor`); aparece como faixa à esquerda da linha do item (`ItemRow`) e como bolinha ao lado do seletor de área.

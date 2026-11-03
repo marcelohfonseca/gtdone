@@ -25,6 +25,14 @@
 				<input name="name" value={e.name} required aria-label={t('Nome')} />
 				<button type="submit" class="ghost">{t('Renomear')}</button>
 			</form>
+			{#if data.kind === 'areas'}
+				<form method="POST" action="?/color" use:enhance class="color">
+					<input type="hidden" name="id" value={e.id} />
+					<input type="color" name="color" value={e.color ?? '#888888'} aria-label={t('Cor de destaque')} />
+					<button type="submit" class="ghost">{t('Aplicar cor')}</button>
+					{#if e.color}<button type="submit" class="ghost" name="clear" value="1">{t('Sem cor')}</button>{/if}
+				</form>
+			{/if}
 			<form method="POST" action="?/delete" use:enhance>
 				<input type="hidden" name="id" value={e.id} />
 				<button type="submit" class="ghost danger">{t('Excluir')}</button>

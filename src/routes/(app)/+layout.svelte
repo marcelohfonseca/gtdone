@@ -59,6 +59,7 @@
 			(l) => !((l === 'later' && data.prefs.later === 'off') || (l === 'waiting' && data.prefs.waiting === 'off'))
 		)
 	);
+	const currentAreaColor = $derived(data.areas.find((a) => a.id === data.filter.area)?.color ?? null);
 	const sidebarProjects = $derived(
 		data.sidebarProjects.filter((p) => data.prefs.sequentialSidebar === 'on' || !p.sequential)
 	);
@@ -237,22 +238,25 @@
 				<hr />
 				{@render focusLink()}
 			{/if}
-			{#if data.prefs.calendar === 'on'}
-				<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
-					<span class="icon">🗓️</span>
-					<span class="label">{t('Calendário')}</span>
-				</a>
-			{/if}
-			{#if data.prefs.kanban === 'on'}
-				<h4><a class="h4link" href="/kanban">Kanban</a></h4>
-				{#each data.boards as b (b.id)}
-					<a href={`/kanban/${b.id}`} class:active={path === `/kanban/${b.id}`}>
-						<span class="icon">🗂️</span>
-						<span class="label">{b.name}</span>
+			{#if data.prefs.calendar === 'on' || data.prefs.kanban === 'on'}
+				<h4>{t('Visualizações')}</h4>
+				{#if data.prefs.calendar === 'on'}
+					<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
+						<span class="icon">🗓️</span>
+						<span class="label">{t('Calendário')}</span>
 					</a>
-				{:else}
-					<span class="hint">{t('Nenhum quadro')}</span>
-				{/each}
+				{/if}
+				{#if data.prefs.kanban === 'on'}
+					<a href="/kanban" class:active={path === '/kanban'}>
+						<span class="icon">🗂️</span>
+						<span class="label">Kanban</span>
+					</a>
+					{#each data.boards as b (b.id)}
+						<a class="sub" href={`/kanban/${b.id}`} class:active={path === `/kanban/${b.id}`}>
+							<span class="label">{b.name}</span>
+						</a>
+					{/each}
+				{/if}
 			{/if}
 			<h4><a class="h4link" href="/projects">{t('Projetos')}</a></h4>
 			{#each sidebarProjects as p (p.id)}
@@ -311,6 +315,7 @@
 	<div class="main">
 		<header>
 			<button class="ghost burger" aria-label={t('Menu')} onclick={() => (sidebarOpen = !sidebarOpen)}>☰</button>
+			{#if currentAreaColor}<span class="swatch" style:background={currentAreaColor} aria-hidden="true"></span>{/if}
 			<select aria-label={t('Área')} value={data.filter.area == null ? '' : String(data.filter.area)} onchange={changeArea}>
 				<option value="">{t('Todas as áreas')}</option>
 				{#each data.areas as a (a.id)}<option value={String(a.id)}>{a.name}</option>{/each}
@@ -597,6 +602,16 @@
 	nav .tag.active {
 		background: var(--accent);
 		color: #fff;
+	}
+	.swatch {
+		width: 0.8rem;
+		height: 0.8rem;
+		border-radius: 50%;
+		flex: none;
+	}
+	nav a.sub {
+		padding-left: 2.3rem;
+		font-size: 0.9em;
 	}
 	nav a.h4link {
 		padding: 0;

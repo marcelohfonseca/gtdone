@@ -3,7 +3,7 @@ import { GtdError } from './core.ts';
 
 export const NAMED_KINDS = ['areas', 'tags', 'contacts'] as const;
 export type NamedKind = (typeof NAMED_KINDS)[number];
-export type Named = { id: number; name: string };
+export type Named = { id: number; name: string; color?: string | null };
 
 export function isNamedKind(v: string): v is NamedKind {
 	return (NAMED_KINDS as readonly string[]).includes(v);
@@ -26,10 +26,15 @@ function assertUnique(db: DatabaseSync, kind: NamedKind, name: string, exceptId 
 
 export function listNamed(db: DatabaseSync, kind: NamedKind): Named[] {
 	const order = kind === 'areas' ? 'position, id' : 'name COLLATE NOCASE';
+	const cols = kind === 'areas' ? 'id, name, color' : 'id, name';
 	return db
-		.prepare(`SELECT id, name FROM ${TABLE[kind]} ORDER BY ${order}`)
+		.prepare(`SELECT ${cols} FROM ${TABLE[kind]} ORDER BY ${order}`)
 		.all()
-		.map((r) => ({ id: Number(r.id), name: String(r.name) }));
+		.map((r) => ({
+			id: Number(r.id),
+			name: String(r.name),
+			...(kind === 'areas' ? { color: r.color == null ? null : String(r.color) } : {})
+		}));
 }
 
 export function createNamed(db: DatabaseSync, kind: NamedKind, name: unknown): number {
@@ -56,6 +61,12 @@ export function renameNamed(db: DatabaseSync, kind: NamedKind, id: number, name:
 	const n = cleanName(name);
 	assertUnique(db, kind, n, id);
 	db.prepare(`UPDATE ${TABLE[kind]} SET name = ?, updated_at = ? WHERE id = ?`).run(n, Date.now(), id);
+}
+
+export function setAreaColor(db: DatabaseSync, id: number, color: unknown): void {
+	const c = String(color ?? '').trim();
+	if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) throw new GtdError('cor inválida');
+	db.prepare('UPDATE areas SET color = ?, updated_at = ? WHERE id = ?').run(c ? c.toLowerCase() : null, Date.now(), id);
 }
 
 export function deleteNamed(db: DatabaseSync, kind: NamedKind, id: number): void {

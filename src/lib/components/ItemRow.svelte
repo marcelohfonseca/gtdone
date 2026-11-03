@@ -6,7 +6,7 @@
 	import type { Item } from '#lib/gtd/items.ts';
 	import ItemEditor from './ItemEditor.svelte';
 
-	type Named = { id: number; name: string };
+	type Named = { id: number; name: string; color?: string | null };
 	let {
 		item,
 		today,
@@ -50,6 +50,7 @@
 		const year = sameYear ? '' : ` ${new Date(item.startsAt).getUTCFullYear()}`;
 		return `${day} ${month.charAt(0).toUpperCase()}${month.slice(1)}${year}`;
 	});
+	const areaColor = $derived(item.areaId == null ? null : (areas.find((a) => a.id === item.areaId)?.color ?? null));
 	const checkDone = $derived(item.checklist.filter((c) => c.done).length);
 
 	async function run(name: string, data: Record<string, string | number> = {}) {
@@ -63,7 +64,13 @@
 	}
 </script>
 
-<div class="row" class:done={item.state === 'completed'} data-id={item.id}>
+<div
+	class="row"
+	class:done={item.state === 'completed'}
+	class:colored={areaColor}
+	style:--area={areaColor}
+	data-id={item.id}
+>
 	<span class="handle" title={t('Arrastar para reordenar')}>⋮⋮</span>
 	{#if item.kind === 'task' && item.state !== 'trash'}
 		<input
@@ -158,6 +165,10 @@
 		font-size: var(--row-font);
 		border-bottom: 1px solid var(--border);
 		position: relative;
+	}
+	.row.colored {
+		box-shadow: inset 3px 0 0 var(--area);
+		padding-left: 0.5rem;
 	}
 	.row.done .title {
 		text-decoration: line-through;

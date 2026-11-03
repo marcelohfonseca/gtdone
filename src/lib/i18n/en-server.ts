@@ -7,6 +7,7 @@ export const EN_SERVER: Record<string, string> = {
 	'agrupamento inválido': 'invalid grouping',
 	'as colunas deste agrupamento são automáticas': 'columns for this grouping are automatic',
 	'já existe uma coluna para esse estado': 'a column for that state already exists',
+	'cor inválida': 'invalid color',
 	'nome muito longo': 'name too long',
 	'objetivo não encontrado': 'goal not found',
 	'destino do vínculo não encontrado': 'link target not found',

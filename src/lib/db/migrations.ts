@@ -288,6 +288,13 @@ const MIGRATIONS: Migration[] = [
 				CREATE INDEX idx_board_cards_column ON board_cards(column_id);
 			`);
 		}
+	},
+	{
+		version: 7,
+		name: 'area-color',
+		up: (db) => {
+			db.exec('ALTER TABLE areas ADD COLUMN color TEXT;');
+		}
 	}
 ];
 
