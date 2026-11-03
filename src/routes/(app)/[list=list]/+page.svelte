@@ -51,7 +51,7 @@
 	{/if}
 {/snippet}
 
-{#if data.list !== 'later'}{@render projectGroup()}{/if}
+{#if data.list !== 'later' && data.list !== 'next'}{@render projectGroup()}{/if}
 
 {#if error}<p class="error">{t.msg(error)}</p>{/if}
 {#if data.list === 'trash' && data.items.length}

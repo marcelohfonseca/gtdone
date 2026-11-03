@@ -80,14 +80,14 @@
 			if (!map.has(key)) {
 				map.set(key, {
 					key,
-					title: title ?? (byProject ? null : t('Sem responsável')),
+					title: title ?? (byProject ? t('Sem projeto') : t('Sem responsável')),
 					href: byProject && it.projectId ? `/projects/${it.projectId}` : null,
 					items: []
 				});
 			}
 			map.get(key)!.items.push(it);
 		}
-		return [...map.values()].sort((a, b) => Number(a.title !== null) - Number(b.title !== null));
+		return [...map.values()].sort((a, b) => Number(a.key === 'p0') - Number(b.key === 'p0'));
 	});
 
 	const prefs = usePrefs();
@@ -102,7 +102,7 @@
 	let expanded = $state<string[]>([]);
 
 	function visible(group: Group): Item[] {
-		const limited = limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state') && group.title !== null;
+		const limited = limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state');
 		return limited && !expanded.includes(group.key) ? group.items.slice(0, limitPerGroup) : group.items;
 	}
 

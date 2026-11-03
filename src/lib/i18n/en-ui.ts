@@ -37,6 +37,7 @@ export const EN_UI: Record<string, string> = {
 	'Em foco': 'In focus',
 	'Algum dia — vale revisar': 'Someday — worth reviewing',
 	'Sem responsável': 'No assignee',
+	'Sem projeto': 'No project',
 	// ItemRow
 	'Data de início (AAAA-MM-DD):': 'Start date (YYYY-MM-DD):',
 	'Arrastar para reordenar': 'Drag to reorder',
