@@ -1,0 +1,11 @@
+node_modules
+.git
+.svelte-kit
+build
+data
+data-docker
+backups
+.env
+.env.*
+!.env.docker.example
+!.env.example

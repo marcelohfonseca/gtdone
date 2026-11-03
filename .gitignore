@@ -17,6 +17,7 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.test
+!.env.docker.example
 
 # Vite
 vite.config.js.timestamp-*
@@ -24,3 +25,4 @@ vite.config.ts.timestamp-*
 
 # Banco de dados local do GTDone
 data/
+data-docker/
