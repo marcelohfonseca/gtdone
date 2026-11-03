@@ -50,6 +50,8 @@
 		const year = sameYear ? '' : ` ${new Date(item.startsAt).getUTCFullYear()}`;
 		return `${day} ${month.charAt(0).toUpperCase()}${month.slice(1)}${year}`;
 	});
+	const tagColor = (name: string) => tags.find((x) => x.name === name)?.color ?? null;
+	const contactColor = $derived(contacts.find((c) => c.id === item.contactId)?.color ?? null);
 	const areaColor = $derived(item.areaId == null ? null : (areas.find((a) => a.id === item.areaId)?.color ?? null));
 	const checkDone = $derived(item.checklist.filter((c) => c.done).length);
 
@@ -84,7 +86,7 @@
 	{/if}
 	<button class="title" onclick={() => (open = !open)}>
 		{#if startLabel}<span class="startdate" title={t('Data de início')}>{startLabel}</span>{/if}
-		{#if item.contactName}<span class="startdate" title={t('Contato')}>{item.contactName}</span>{/if}
+		{#if item.contactName}<span class="startdate" class:tinted={contactColor} style:--tint={contactColor} title={t('Contato')}>{item.contactName}</span>{/if}
 		{item.title}
 		{#if item.notes}<span class="muted" title={t('Tem notas')}> ✎</span>{/if}
 	</button>
@@ -95,7 +97,7 @@
 	{#if showProject && item.projectName}
 		<a class="chip" href={`/projects/${item.projectId}`}>{item.projectName}</a>
 	{/if}
-	{#each item.tags as tag (tag)}<span class="chip tag">#{tag}</span>{/each}
+	{#each item.tags as tag (tag)}<span class="chip tag" class:tinted={tagColor(tag)} style:--tint={tagColor(tag)}>#{tag}</span>{/each}
 	{#if item.minutes}<span class="muted small">{minutesLabel(item.minutes)}</span>{/if}
 	{#if due}<span class="due" class:late={due.late}>{due.text}</span>{/if}
 	{#if !archived}
@@ -148,6 +150,11 @@
 {/if}
 
 <style>
+	.chip.tinted,
+	.startdate.tinted {
+		background: color-mix(in srgb, var(--tint) 22%, transparent);
+		color: var(--tint);
+	}
 	.startdate {
 		font-size: 0.75rem;
 		background: color-mix(in srgb, var(--accent) 18%, transparent);

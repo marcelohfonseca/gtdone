@@ -25,7 +25,7 @@ import {
 } from './items.ts';
 import { loadPreferences, savePreferences } from './preferences.ts';
 import { createProject, getProject, listProjects, projectFromItem, reopenProject, completeProject, updateProject } from './projects.ts';
-import { createNamed, deleteNamed, listNamed, parseTagNames, setAreaColor } from './organize.ts';
+import { createNamed, deleteNamed, listNamed, parseTagNames, setNamedColor, splitAreaFromTags } from './organize.ts';
 import { GtdError, parseDateInput, advanceDate, parseRecurrence } from './core.ts';
 
 const TODAY = Date.UTC(2025, 5, 10);
@@ -330,10 +330,24 @@ describe('cor da área', () => {
 		runMigrations(db);
 		const id = createNamed(db, 'areas', 'Trabalho');
 		expect(listNamed(db, 'areas')[0].color).toBeNull();
-		setAreaColor(db, id, '#FF8800');
+		setNamedColor(db, 'areas', id, '#FF8800');
 		expect(listNamed(db, 'areas')[0].color).toBe('#ff8800');
-		expect(() => setAreaColor(db, id, 'vermelho')).toThrow(GtdError);
-		setAreaColor(db, id, '');
+		expect(() => setNamedColor(db, 'areas', id, 'vermelho')).toThrow(GtdError);
+		setNamedColor(db, 'areas', id, '');
 		expect(listNamed(db, 'areas')[0].color).toBeNull();
+	});
+
+	it('colore tags e contatos e separa a área do campo de tags', () => {
+		const db = new DatabaseSync(':memory:');
+		runMigrations(db);
+		const tag = createNamed(db, 'tags', 'Casa');
+		setNamedColor(db, 'tags', tag, '#3e63dd');
+		expect(listNamed(db, 'tags')[0].color).toBe('#3e63dd');
+		const contact = createNamed(db, 'contacts', 'Ana');
+		setNamedColor(db, 'contacts', contact, '#e5484d');
+		expect(listNamed(db, 'contacts')[0].color).toBe('#e5484d');
+		const area = createNamed(db, 'areas', 'Trabalho');
+		expect(splitAreaFromTags(db, 'casa, trabalho, #pc')).toEqual({ areaId: area, tags: 'casa,pc' });
+		expect(splitAreaFromTags(db, 'casa')).toEqual({ areaId: null, tags: 'casa' });
 	});
 });

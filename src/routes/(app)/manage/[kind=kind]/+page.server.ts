@@ -1,14 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import { GtdError } from '#lib/gtd/core.ts';
-import { createNamed, deleteNamed, listNamed, renameNamed, setAreaColor, type NamedKind } from '#lib/gtd/organize.ts';
+import { createNamed, deleteNamed, renameNamed, setNamedColor, type NamedKind } from '#lib/gtd/organize.ts';
 import { getDb } from '#lib/server/db.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-const TITLES: Record<NamedKind, string> = { areas: 'Áreas', tags: 'Tags', contacts: 'Contatos' };
-
 export const load: PageServerLoad = ({ params }) => {
 	const kind = params.kind as NamedKind;
-	return { kind, title: TITLES[kind], entries: listNamed(getDb(), kind) };
+	return { kind };
 };
 
 function run(fn: (kind: NamedKind, fd: FormData) => void) {
@@ -29,8 +27,7 @@ export const actions: Actions = {
 	}),
 	rename: run((kind, fd) => renameNamed(getDb(), kind, Number(fd.get('id')), fd.get('name'))),
 	color: run((kind, fd) => {
-		if (kind !== 'areas') throw new GtdError('operação inválida');
-		setAreaColor(getDb(), Number(fd.get('id')), fd.get('color'));
+		setNamedColor(getDb(), kind, Number(fd.get('id')), fd.get('color'));
 	}),
 	delete: run((kind, fd) => deleteNamed(getDb(), kind, Number(fd.get('id'))))
 };

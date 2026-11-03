@@ -29,6 +29,7 @@
 	let newStep = $state('');
 	const links = $derived(extractLinks(item.notes));
 	let busy = $state(false);
+	const areaName = $derived(areas.find((a) => a.id === item.areaId)?.name);
 	const readOnly = $derived(item.state === 'trash' || item.state === 'completed');
 
 	// Menu de estado/reagendamento: os valores vivem em campos ocultos enviados com o formulário.
@@ -113,7 +114,7 @@
 	<div class="cols">
 	<div class="main">
 	<input name="title" value={item.title} required aria-label={t('Título')} disabled={readOnly} />
-	<input name="tags" list="tag-options" value={item.tags.join(', ')} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} aria-label={t('Tags')} disabled={readOnly} />
+	<input name="tags" list="tag-options" value={[...(areaName ? [areaName] : []), ...item.tags].join(', ')} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} aria-label={t('Tags')} disabled={readOnly} />
 	<textarea name="notes" rows="6" placeholder={t('Notas')} disabled={readOnly}>{item.notes}</textarea>
 	{#if links.length}
 		<p class="links">
@@ -250,18 +251,10 @@
 				{/each}
 			</select>
 		</label>
-		<label>
-			{t('Área')}
-			<select name="areaId" disabled={readOnly}>
-				<option value="">{t('Nenhuma')}</option>
-				{#each areas as a (a.id)}
-					<option value={a.id} selected={item.areaId === a.id}>{a.name}</option>
-				{/each}
-			</select>
-		</label>
 		<GoalPicker kind="item" id={item.id} disabled={readOnly} />
 	</div>
 	<datalist id="tag-options">
+		{#each areas as a (a.id)}<option value={a.name}></option>{/each}
 		{#each tags as tg (tg.id)}<option value={tg.name}></option>{/each}
 	</datalist>
 	</div>

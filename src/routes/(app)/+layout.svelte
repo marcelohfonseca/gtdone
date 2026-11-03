@@ -7,6 +7,7 @@
 	import Composer from '#lib/components/Composer.svelte';
 	import { providePrefs } from '#lib/prefs-context.ts';
 	import { GO_KEYS, SHORTCUTS } from '#lib/shortcuts.ts';
+	import ManageTags from '#lib/components/ManageTags.svelte';
 	import { tick } from 'svelte';
 	import { translate, translateMessage } from '#lib/i18n/index.ts';
 	import type { LayoutProps } from './$types';
@@ -21,6 +22,7 @@
 	let selectedId = $state<number | null>(null);
 	let newMenu = $state(false);
 	let settingsMenu = $state(false);
+	let manageTags = $state(false);
 	let sidebarOpen = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
 
@@ -370,9 +372,7 @@
 				<button class="ghost" aria-label={t('Configurações')} onclick={() => (settingsMenu = !settingsMenu)}>⚙</button>
 				{#if settingsMenu}
 					<div class="menu" role="menu">
-						<a href="/manage/areas">{t('Áreas')}</a>
-						<a href="/manage/tags">{t('Tags')}</a>
-						<a href="/manage/contacts">{t('Contatos')}</a>
+						<button role="menuitem" onclick={() => { manageTags = true; settingsMenu = false; }}>{t('Gerenciar tags…')}</button>
 						<a href="/settings">{t('Preferências')}</a>
 						<form method="POST" action="/logout"><button role="menuitem">{t('Sair')}</button></form>
 					</div>
@@ -401,6 +401,15 @@
 {/snippet}
 
 <Composer bind:mode />
+
+{#if manageTags}
+	<div class="overlay" role="presentation" onclick={() => (manageTags = false)}>
+		<div class="help manage" role="dialog" aria-label={t('Gerenciar tags…')} tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === 'Escape') manageTags = false; }}>
+			<h3>{t('Gerenciar tags…')}</h3>
+			<ManageTags areas={data.areas} contacts={data.contacts} tags={data.tags} onclose={() => (manageTags = false)} />
+		</div>
+	</div>
+{/if}
 
 {#if help}
 	<div class="overlay" role="presentation" onclick={() => (help = false)}>
@@ -489,6 +498,10 @@
 		max-width: 38rem;
 		max-height: 85vh;
 		overflow: auto;
+	}
+	.manage {
+		width: min(30rem, 92vw);
+		overflow: visible;
 	}
 	.help h3 {
 		margin-top: 0;

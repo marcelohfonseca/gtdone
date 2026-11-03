@@ -26,15 +26,10 @@ function assertUnique(db: DatabaseSync, kind: NamedKind, name: string, exceptId 
 
 export function listNamed(db: DatabaseSync, kind: NamedKind): Named[] {
 	const order = kind === 'areas' ? 'position, id' : 'name COLLATE NOCASE';
-	const cols = kind === 'areas' ? 'id, name, color' : 'id, name';
 	return db
-		.prepare(`SELECT ${cols} FROM ${TABLE[kind]} ORDER BY ${order}`)
+		.prepare(`SELECT id, name, color FROM ${TABLE[kind]} ORDER BY ${order}`)
 		.all()
-		.map((r) => ({
-			id: Number(r.id),
-			name: String(r.name),
-			...(kind === 'areas' ? { color: r.color == null ? null : String(r.color) } : {})
-		}));
+		.map((r) => ({ id: Number(r.id), name: String(r.name), color: r.color == null ? null : String(r.color) }));
 }
 
 export function createNamed(db: DatabaseSync, kind: NamedKind, name: unknown): number {
@@ -63,10 +58,10 @@ export function renameNamed(db: DatabaseSync, kind: NamedKind, id: number, name:
 	db.prepare(`UPDATE ${TABLE[kind]} SET name = ?, updated_at = ? WHERE id = ?`).run(n, Date.now(), id);
 }
 
-export function setAreaColor(db: DatabaseSync, id: number, color: unknown): void {
+export function setNamedColor(db: DatabaseSync, kind: NamedKind, id: number, color: unknown): void {
 	const c = String(color ?? '').trim();
 	if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) throw new GtdError('cor inválida');
-	db.prepare('UPDATE areas SET color = ?, updated_at = ? WHERE id = ?').run(c ? c.toLowerCase() : null, Date.now(), id);
+	db.prepare(`UPDATE ${TABLE[kind]} SET color = ?, updated_at = ? WHERE id = ?`).run(c ? c.toLowerCase() : null, Date.now(), id);
 }
 
 export function deleteNamed(db: DatabaseSync, kind: NamedKind, id: number): void {
@@ -80,6 +75,19 @@ export function parseTagNames(csv: unknown): string[] {
 		if (t && !seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), t);
 	}
 	return [...seen.values()];
+}
+
+// Áreas são escolhidas pelo campo de tags: um nome que coincide com uma área vira a área do item.
+export function splitAreaFromTags(db: DatabaseSync, csv: unknown): { areaId: number | null; tags: string } {
+	const areas = listNamed(db, 'areas');
+	let areaId: number | null = null;
+	const rest: string[] = [];
+	for (const name of parseTagNames(csv)) {
+		const area = areas.find((a) => a.name.toLowerCase() === name.toLowerCase());
+		if (area && areaId === null) areaId = area.id;
+		else if (!area) rest.push(name);
+	}
+	return { areaId, tags: rest.join(',') };
 }
 
 export function ensureTagIds(db: DatabaseSync, names: string[]): number[] {

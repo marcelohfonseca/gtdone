@@ -260,3 +260,4 @@ Uma feature só está concluída quando:
 
 - Calendário e Kanban ficam agrupados em "Visualizações" na barra lateral. Cada área pode ter uma cor de destaque (migração 7), mostrada como faixa nas linhas de item e ao lado do filtro de área.
 - Projetos em "Depois" ou "Algum dia" são inativos: aparecem em "Projetos (inativos)" nas listas Depois e Algum dia e, na barra lateral, após os ativos, com o link "mostrar/ocultar projetos inativos" (preferência local). Limite de 10 ações por grupo de estado na página do projeto; a revisão semanal permite adicionar a próxima ação inline.
+- "Gerenciar tags…" (⚙) abre um diálogo com abas Áreas/Contatos/Contextos: criar, renomear, excluir e escolher cor (migração 8 adiciona `color` a tags e contatos). A área de itens e projetos não tem mais seletor próprio: digite o nome da área no campo de tags (`splitAreaFromTags`).

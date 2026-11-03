@@ -14,6 +14,7 @@
 	let error = $state('');
 	let editing = $state(false);
 	const p = $derived(data.project);
+	const areaName = $derived(data.areas.find((a) => a.id === p.areaId)?.name);
 	const closed = $derived(p.state === 'completed' || p.state === 'trash');
 
 	const STATES = [
@@ -63,7 +64,7 @@
 				<!-- svelte-ignore a11y_autofocus -->
 				<input name="name" value={p.name} required autofocus aria-label={t('Nome')} />
 				<input name="desiredOutcome" value={p.desiredOutcome} placeholder={t('Resultado desejado')} />
-				<input name="tags" value={p.tags.join(', ')} placeholder={t('tag1, tag2')} aria-label={t('Tags')} />
+				<input name="tags" list="tag-options" value={[...(areaName ? [areaName] : []), ...p.tags].join(', ')} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} aria-label={t('Tags')} />
 				<textarea name="notes" rows="6" placeholder={t('Notas')}>{p.notes}</textarea>
 				{#if error}<p class="error">{t.msg(error)}</p>{/if}
 				<div class="actions">
@@ -86,14 +87,12 @@
 						<option value="sequential" selected={p.executionMode === 'sequential'}>{t('Sequencial')}</option>
 					</select>
 				</label>
-				<label>{t('Área')}
-					<select name="areaId">
-						<option value="">{t('Nenhuma')}</option>
-						{#each data.areas as a (a.id)}<option value={String(a.id)} selected={p.areaId === a.id}>{a.name}</option>{/each}
-					</select>
-				</label>
 				<GoalPicker kind="project" id={p.id} />
 			</div>
+			<datalist id="tag-options">
+				{#each data.areas as a (a.id)}<option value={a.name}></option>{/each}
+				{#each data.tags as tg (tg.id)}<option value={tg.name}></option>{/each}
+			</datalist>
 		</form>
 	{/if}
 	{#if p.stalled}<p class="warn">{t('Projeto ativo sem próxima ação — defina a próxima ação abaixo.')}</p>{/if}

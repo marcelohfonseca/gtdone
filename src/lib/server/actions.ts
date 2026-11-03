@@ -49,7 +49,7 @@ import {
 	updateBoard
 } from '#lib/gtd/kanban.ts';
 import { loadPreferences, type Preferences } from '#lib/gtd/preferences.ts';
-import { listNamed } from '#lib/gtd/organize.ts';
+import { listNamed, splitAreaFromTags } from '#lib/gtd/organize.ts';
 import { parseQuickAdd } from '#lib/nlp/quick-add.ts';
 import { getDb } from './db.ts';
 
@@ -178,11 +178,24 @@ function readTarget(fd: FormData): LinkTarget {
 export const appActions = {
 	capture: act((db, fd, ev, today) => {
 		const input = readItemInput(fd);
+		if (typeof input.tags === 'string') {
+			const split = splitAreaFromTags(db, input.tags);
+			input.tags = split.tags;
+			if (input.areaId === undefined && split.areaId !== null) input.areaId = split.areaId;
+		}
 		if (fd.get('quick') === '1') applyQuickAdd(db, input, today);
 		if (input.areaId === undefined) input.areaId = areaOfFilter(ev);
 		captureItem(db, input, today);
 	}),
-	edit: act((db, fd, _ev, today) => updateItem(db, reqId(fd), readItemInput(fd), today)),
+	edit: act((db, fd, _ev, today) => {
+		const input = readItemInput(fd);
+		if (has(fd, 'tags') && !has(fd, 'areaId')) {
+			const split = splitAreaFromTags(db, fd.get('tags'));
+			input.areaId = split.areaId;
+			input.tags = split.tags;
+		}
+		updateItem(db, reqId(fd), input, today);
+	}),
 	move: act((db, fd, ev, today) => {
 		const starts = has(fd, 'startsAt') ? parseDateInput(fd.get('startsAt')) : undefined;
 		const id = reqId(fd);
@@ -240,6 +253,7 @@ export const appActions = {
 		const id = reqId(fd);
 		if (fd.get('complete') === '1') return completeProject(db, id);
 		if (fd.get('reopen') === '1') return reopenProject(db, id);
+		const split = has(fd, 'tags') && !has(fd, 'areaId') ? splitAreaFromTags(db, fd.get('tags')) : null;
 		updateProject(
 			db,
 			id,
@@ -248,10 +262,10 @@ export const appActions = {
 				desiredOutcome: fd.get('desiredOutcome'),
 				notes: fd.get('notes'),
 				state: fd.get('state'),
-				areaId: optId(fd, 'areaId'),
+				areaId: split ? split.areaId : optId(fd, 'areaId'),
 				startsAt: parseDateInput(fd.get('startsAt')),
 				dueAt: parseDateInput(fd.get('dueAt')),
-				tags: fd.get('tags'),
+				tags: split ? split.tags : fd.get('tags'),
 				executionMode: fd.get('executionMode')
 			},
 			today

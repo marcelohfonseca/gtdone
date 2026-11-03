@@ -7,7 +7,7 @@
 	import { copyText, itemsAsText } from '#lib/format.ts';
 	import { usePrefs, useT } from '#lib/prefs-context.ts';
 
-	type Named = { id: number; name: string };
+	type Named = { id: number; name: string; color?: string | null };
 	let {
 		items,
 		today,

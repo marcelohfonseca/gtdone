@@ -295,6 +295,13 @@ const MIGRATIONS: Migration[] = [
 		up: (db) => {
 			db.exec('ALTER TABLE areas ADD COLUMN color TEXT;');
 		}
+	},
+	{
+		version: 8,
+		name: 'tag-contact-color',
+		up: (db) => {
+			db.exec('ALTER TABLE tags ADD COLUMN color TEXT; ALTER TABLE contacts ADD COLUMN color TEXT;');
+		}
 	}
 ];
 
