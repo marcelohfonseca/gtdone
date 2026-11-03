@@ -22,6 +22,7 @@
 		error = (await postAction('emptyTrash', {})) ?? '';
 	}
 
+	const inactiveList = $derived(data.list === 'later' || data.list === 'someday');
 	const groupBy = $derived(
 		data.list === 'focus' ? 'focus' : data.list === 'waiting' ? 'contact' : data.list === 'scheduled' ? 'schedule' : ['next', 'later', 'someday'].includes(data.list) ? 'project' : 'none'
 	);
@@ -40,7 +41,7 @@
 
 {#snippet projectGroup()}
 	{#if data.groupedProjects.length}
-		<h3 class="group">{data.list === 'later' ? t('Projetos (inativos)') : t('Projetos')}</h3>
+		<h3 class="group">{inactiveList ? t('Projetos (inativos)') : t('Projetos')}</h3>
 		<ul class="projects">
 			{#each data.groupedProjects as p (p.id)}
 				<li><span class="actions-badge">{p.openCount} {p.openCount === 1 ? t('ação') : t('ações')}</span> <a href={`/projects/${p.id}`}>{p.name}</a>
@@ -51,7 +52,7 @@
 	{/if}
 {/snippet}
 
-{#if data.list !== 'later' && data.list !== 'next'}{@render projectGroup()}{/if}
+{#if !inactiveList && data.list !== 'next'}{@render projectGroup()}{/if}
 
 {#if error}<p class="error">{t.msg(error)}</p>{/if}
 {#if data.list === 'trash' && data.items.length}
@@ -74,7 +75,7 @@
 	emptyText={data.meta.empty}
 />
 
-{#if data.list === 'later'}{@render projectGroup()}{/if}
+{#if inactiveList}{@render projectGroup()}{/if}
 
 <style>
 	.actions-badge {

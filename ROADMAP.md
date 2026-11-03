@@ -259,4 +259,4 @@ Uma feature só está concluída quando:
 ### Complemento — Visualizações e cor de área
 
 - Calendário e Kanban ficam agrupados em "Visualizações" na barra lateral. Cada área pode ter uma cor de destaque (migração 7), mostrada como faixa nas linhas de item e ao lado do filtro de área.
-- Projetos em "Depois" são inativos: aparecem em "Projetos (inativos)" na lista Depois e, na barra lateral, após os ativos, com o link "mostrar/ocultar projetos inativos" (preferência local). Limite de 10 ações por grupo de estado na página do projeto; a revisão semanal permite adicionar a próxima ação inline.
+- Projetos em "Depois" ou "Algum dia" são inativos: aparecem em "Projetos (inativos)" nas listas Depois e Algum dia e, na barra lateral, após os ativos, com o link "mostrar/ocultar projetos inativos" (preferência local). Limite de 10 ações por grupo de estado na página do projeto; a revisão semanal permite adicionar a próxima ação inline.
