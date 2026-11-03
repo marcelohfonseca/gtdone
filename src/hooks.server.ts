@@ -1,9 +1,10 @@
 import { redirect } from '@sveltejs/kit';
-import type { Handle } from '@sveltejs/kit/hooks';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { getDb } from '#lib/server/db.ts';
 import { loadPreferences } from '#lib/gtd/preferences.ts';
 import { getSession } from '#lib/auth/sessions.ts';
 import { SESSION_COOKIE } from '#lib/auth/constants.ts';
+import { log } from '#lib/server/log.ts';
 import type { Session } from '#lib/auth/sessions.ts';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -31,5 +32,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 				'<html lang="en">',
 				`<html lang="${prefs.lang}" data-theme="${prefs.theme}" data-accent="${prefs.accent}" data-density="${prefs.density}">`
 			)
+	});
+};
+
+export const handleError: HandleServerError = ({ error, event }) => {
+	// Só método, rota e mensagem: nada de corpo da requisição nem dados privados.
+	log('error', 'request.error', {
+		method: event.request.method,
+		path: event.url.pathname,
+		message: error instanceof Error ? error.message : 'erro desconhecido'
 	});
 };

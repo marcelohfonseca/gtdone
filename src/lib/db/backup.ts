@@ -1,4 +1,4 @@
-import type { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, existsSync, statSync, renameSync, rmSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -27,13 +27,27 @@ export function backupDatabase(db: DatabaseSync, options: BackupOptions): Backup
 
 	db.exec(`VACUUM INTO '${tmpPath.replaceAll("'", "''")}'`);
 	renameSync(tmpPath, finalPath);
+	if (!verifyBackup(finalPath)) {
+		rmSync(finalPath, { force: true });
+		throw new Error('o backup gerado falhou na verificação de integridade');
+	}
 
 	const removed = pruneOldBackups(backupDir, keep);
 	return { path: finalPath, created, removed };
 }
 
 export function verifyBackup(backupPath: string): boolean {
-	return existsSync(backupPath) && statSync(backupPath).size > 0;
+	if (!existsSync(backupPath) || statSync(backupPath).size === 0) return false;
+	let copy: DatabaseSync | null = null;
+	try {
+		copy = new DatabaseSync(backupPath, { readOnly: true });
+		const rows = copy.prepare('PRAGMA integrity_check').all() as { integrity_check: string }[];
+		return rows.length === 1 && rows[0].integrity_check === 'ok';
+	} catch {
+		return false;
+	} finally {
+		copy?.close();
+	}
 }
 
 function pruneOldBackups(backupDir: string, keep: number): string[] {

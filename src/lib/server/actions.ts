@@ -52,6 +52,7 @@ import {
 	updateBoard
 } from '#lib/gtd/kanban.ts';
 import { loadPreferences, type Preferences } from '#lib/gtd/preferences.ts';
+import { secureCookies } from '#lib/server/session-cookie.ts';
 import { listNamed, resolveTagField } from '#lib/gtd/organize.ts';
 import { parseQuickAdd } from '#lib/nlp/quick-add.ts';
 import { getDb } from './db.ts';
@@ -393,7 +394,7 @@ export const appActions = {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
-			secure: ev.url.protocol === 'https:',
+			secure: secureCookies(ev.url),
 			maxAge: v ? 60 * 60 * 24 * 365 : 0
 		});
 		return { ok: true };

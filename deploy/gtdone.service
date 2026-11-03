@@ -1,0 +1,24 @@
+[Unit]
+Description=GTDone
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gtdone
+Group=gtdone
+WorkingDirectory=/opt/gtdone
+EnvironmentFile=/etc/gtdone/gtdone.env
+ExecStart=/usr/bin/node build/index.js
+Restart=always
+RestartSec=5
+
+# Isolamento: só o diretório de dados é gravável.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/gtdone
+
+[Install]
+WantedBy=multi-user.target

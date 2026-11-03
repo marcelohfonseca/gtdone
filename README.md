@@ -26,7 +26,9 @@ The backup scheduler creates a SQLite backup when the server starts and every 24
 - `GTDONE_BACKUP_DIR`: backup directory; defaults to `backups` beside the database.
 - `GTDONE_BACKUP_KEEP`: number of backups to retain; defaults to `7`.
 
-Backups should be copied to storage outside the host machine as part of the deployment's disaster-recovery plan.
+Backups should be copied to storage outside the host machine as part of the deployment's disaster-recovery plan. See [docs/OPERACAO.md](docs/OPERACAO.md) (in Portuguese) for the systemd service, VPN/HTTPS setup, login rate limiting, logs, off-site backup and restore procedure; the files are in `deploy/`.
+- `GTDONE_LOG_LEVEL`: `info` (default), `warn` or `error`.
+- `GTDONE_COOKIE_SECURE=1`: force the `Secure` flag on cookies (it is automatic when the request URL is https; set `ORIGIN` behind a proxy).
 
 ## Integrations (optional)
 

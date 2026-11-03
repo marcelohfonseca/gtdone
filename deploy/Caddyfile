@@ -1,0 +1,6 @@
+# HTTPS com certificado interno do Caddy; escute apenas no IP da interface da VPN.
+gtdone.vpn.example {
+	bind 10.8.0.1
+	tls internal
+	reverse_proxy 127.0.0.1:3000
+}

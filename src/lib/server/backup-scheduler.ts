@@ -1,6 +1,7 @@
 import { join, dirname } from 'node:path';
 import type { Database } from '#lib/db/client.ts';
 import { backupDatabase } from '#lib/db/backup.ts';
+import { log } from '#lib/server/log.ts';
 import { getDatabasePath } from '#lib/server/db.ts';
 
 export const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -16,7 +17,8 @@ export type BackupSchedulerOptions = {
 export function startBackupScheduler(options: BackupSchedulerOptions): () => void {
 	const run = () => {
 		try {
-			backupDatabase(options.db, { backupDir: options.backupDir, keep: options.keep });
+			const r = backupDatabase(options.db, { backupDir: options.backupDir, keep: options.keep });
+			log('info', 'backup.ok', { file: r.path, removed: r.removed.length });
 		} catch (error) {
 			(options.onError ?? console.error)('[GTDone] Falha ao criar backup do SQLite:', error);
 		}

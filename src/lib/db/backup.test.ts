@@ -82,3 +82,12 @@ describe('backupDatabase', () => {
 		}
 	});
 });
+
+describe('verifyBackup (integridade)', () => {
+	it('rejeita arquivo que não é um banco SQLite', async () => {
+		const { writeFileSync } = await import('node:fs');
+		const p = join(mkdtempSync(join(tmpdir(), 'gtdone-bkp-bad-')), 'x.db');
+		writeFileSync(p, 'isto não é um banco de dados sqlite');
+		expect(verifyBackup(p)).toBe(false);
+	});
+});

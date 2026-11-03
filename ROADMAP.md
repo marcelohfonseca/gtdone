@@ -56,7 +56,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 **Implementado**
 
-- Repositório Git criado e branch ativa `feature/fase0-fundacao`; como foi inicializado sem commits-base, os ponteiros `main` e `develop` ainda precisam ser ancorados antes de iniciar a próxima feature.
+- Repositório Git criado; trabalho atual na branch `develop`.
 - Scaffolding SvelteKit com TypeScript, Vitest e adapter-node.
 - Camada SQLite com WAL, foreign keys e migração versionada inicial.
 - Schema inicial para usuários, sessões, itens, projetos, áreas, tags, contatos, checklists, recorrências e preferências.
@@ -66,16 +66,18 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 - Backup automático no boot de produção e a cada 24 horas; variáveis `GTDONE_DB_PATH`, `GTDONE_BACKUP_DIR` e `GTDONE_BACKUP_KEEP`.
 - Testes automatizados para banco, autenticação, sessões, backup e agendamento.
 
-**Pendente para completar a fundação**
+**Implementado depois (código)**
 
-- HTTPS dentro da VPN e ativação do atributo `secure` do cookie de sessão.
-- Ancorar `main` e `develop` no histórico inicial para completar a estrutura de branches Git Flow antes de abrir outras branches de feature.
-- Serviço de inicialização e reinício automático na máquina (por exemplo, systemd); configurar usuário e permissões dedicados.
-- Fazer backup para outro dispositivo ou armazenamento protegido, definir política de retenção externa e documentar o procedimento de restauração.
-- Verificar integridade dos backups com abertura do banco e `PRAGMA integrity_check`, além do teste de restauração já existente.
-- Limitar tentativas de login e revisar a invalidação e a duração das sessões.
-- Configurar logs operacionais sem registrar senhas, tokens ou conteúdo privado das tarefas.
-- Documentar configuração da VPN, endereço HTTPS, variáveis de ambiente e recuperação após falha.
+- Cookie de sessão `secure` automático em HTTPS (`ORIGIN`) ou com `GTDONE_COOKIE_SECURE=1`.
+- Limite de tentativas de login (5 falhas em 15 min por IP/e-mail → bloqueio de 15 min, HTTP 429); sessões expiradas removidas no login.
+- Log operacional por eventos, sem dados sensíveis (`GTDONE_LOG_LEVEL`).
+- Backups verificados com `PRAGMA integrity_check` (inválidos são descartados).
+- Artefatos em `deploy/` (systemd, Caddy, `.env`, backup externo) e guia `docs/OPERACAO.md` (VPN, HTTPS, restauração).
+- Branches `main` e `develop` criadas.
+
+**Pendente (depende da máquina de produção)**
+
+- Aplicar na máquina real: instalar o serviço, configurar a VPN/HTTPS e agendar o backup externo, seguindo `docs/OPERACAO.md`; testar a restauração numa instalação limpa.
 
 **Critério de saída:** a máquina inicia o serviço automaticamente, aceita acesso HTTPS somente pela VPN, cria backups locais e externos e permite restaurar os dados numa instalação limpa.
 
