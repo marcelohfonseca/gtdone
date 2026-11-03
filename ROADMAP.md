@@ -52,6 +52,13 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 ## Roadmap por fases
 
+### Situação atual
+
+- Os escopos principais das Fases 1–5 e os recursos de portabilidade/integrações da Fase 6 estão implementados.
+- Fase 0 está implementada no código e documentada; implantação na máquina de produção, VPN/HTTPS e cópia externa de backups ainda dependem de configuração no ambiente.
+- Pendências identificadas: exibir `[Pessoa]`, `[Contexto]` ou `[Área]` nas linhas dos itens; atualizar `.github/copilot-instructions.md`; decidir se e como implementar IA/MCP.
+- O bug de densidade relatado anteriormente ainda não foi reproduzido nem resolvido.
+
 ### Fase 0 — Fundação e operação
 
 **Implementado**
@@ -79,18 +86,11 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 - Aplicar na máquina real: instalar o serviço, configurar a VPN/HTTPS e agendar o backup externo, seguindo `docs/OPERACAO.md`; testar a restauração numa instalação limpa.
 
-**Critério de saída:** a máquina inicia o serviço automaticamente, aceita acesso HTTPS somente pela VPN, cria backups locais e externos e permite restaurar os dados numa instalação limpa.
+**Critério de saída:** pendente até a implantação na máquina real, com acesso HTTPS somente pela VPN, backups locais e externos e restauração validada numa instalação limpa.
 
 ### Fase 1 — Captura e clarificação
 
-- **Implementado (concluído):** shell com sidebar (Inbox, Next, Later, Waiting, Scheduled, Someday, Focus, projetos, tags, Logbook, Trash), barra superior (seletor de área, Novo item com atalhos I/X/L/W/S/Y/F/P/G, busca `/`, configurações), captura rápida por lista (Enter cria, Esc limpa), linhas com conclusão/estrela/menu/reordenação (arrastar ou Subir/Descer), detalhe inline do item, dica de dois minutos na Inbox, Logbook e Trash com restauração, projetos com página própria; persistência em SQLite (migração v3).
-- Histórico: versão inicial com Inbox, edição, referência, projetos e atalhos.
-- Completar o shell indicado pelos templates: navegação lateral para todas as listas, projetos, áreas/tags, Logbook e Trash; barra superior com seletor de área, criação rápida, busca e preferências.
-- Tornar a captura rápida de uma linha disponível nas listas, permitindo criar itens em sucessão com Enter e cancelar com Escape; o destino inicial acompanha a lista atual.
-- Apresentar itens como linhas com conclusão, inclusão/remoção da Focus, notas, menu de ações e reordenação manual; suportar modos de densidade/lista sem alterar os dados.
-- Implementar detalhe de item que permita atualizar título e notas e encaminhar à lista correta sem perder metadados.
-- Oferecer orientação de clarificação, incluindo a pergunta sobre trabalho que leva menos de dois minutos, sem impor que a tarefa seja executada no app.
-- Preservar conteúdo e estado após navegação, refresh e reinício do servidor.
+- **Implementado:** shell completo com navegação, listas GTD, projetos, captura rápida, edição contextual, reordenação, atalhos, persistência SQLite, Logbook e lixeira. A Inbox inclui orientação de clarificação de dois minutos.
 
 **Critério de saída:** o shell de navegação e os fluxos de captura/clarificação funcionam sem perda de conteúdo; as ações rápidas de teclado não interceptam digitação em campos.
 
@@ -98,29 +98,15 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 - **Implementado:** CRUD de áreas, tags e contatos (`/manage/<tipo>`); área, tags, contato delegado, tempo e energia no item; início e prazo independentes (Scheduled vira Next na data); reordenação persistente; referências distintas; estado do projeto (ativo/Later/Scheduled/Someday) com data própria; seletor de área global (cookie) e filtro por tag.
 - **Também implementado:** Quick Add com prefixos `!área`, `@pessoa`, `#contexto`; conversão de tipo de tag (Pessoa↔Contexto) no diálogo de tags.
-- **Adiado:** nada pendente (filtros por tempo/energia, densidade, execução sequencial, exclusão permanente e retenção do Logbook foram implementados depois).
-- Criar/administrar tags e contextos e associá-los a itens e projetos; criar áreas e contatos com gerenciamento e seleção a partir dos detalhes.
-- Implementar associação de área, tags e contato delegado no item; o seletor de área global filtra listas e pode manter itens sem área visíveis conforme preferência.
-- Registrar tempo estimado e energia, com filtros e apresentação no detalhe/linha do item.
-- Tratar data de início/agendamento e deadline como conceitos independentes; Scheduled não se torna executável antes do início.
-- Adicionar reordenação persistente por posição, preservando a ordenação manual ao mover itens.
-- Distinguir referências de tarefas nas listas e preservar notas/dados compatíveis nas conversões.
-- Adicionar estado de projeto independente do estado da tarefa: ativo, Later, Scheduled ou Someday; estado e data do projeto não devem ser confundidos com os de suas ações.
-- Criar migrações aditivas para os novos campos/relações e preservar dados existentes.
+- **Implementado depois:** gerenciamento de cores para áreas, contatos e contextos; seleção de área por prefixo no campo de tags; objetivos também aceitam uma área e acompanham o filtro global de área.
+- **Pendente:** mostrar o tipo da tag (Pessoa, Contexto ou Área) junto às tags nas linhas dos itens.
 
 **Critério de saída:** itens podem ser organizados sem perder a semântica GTD, e início e prazo final comportam-se como conceitos separados.
 
 ### Fase 3 — Engajar, Focus, filtros e busca
 
-- **Implementado:** Focus = estrela (manual) + próximas vencidas ou com prazo hoje (automático), agrupado em "Vencidas e para hoje", "Em foco" e "Algum dia — vale revisar" sem alterar o estado original; filtros combináveis na URL (energia, tempo disponível, contato, projeto, tag, prazo, área) com chips removíveis e "Limpar"; ordenação por prazo; busca por título, notas, projeto e tag (LIKE; itens sem estimativa de tempo continuam visíveis no filtro de tempo); contagens e badge de atrasadas na barra lateral; "ações possíveis" via filtros de energia/tempo/tag na lista Próximas.
-- **Implementado depois:** busca FTS5 com tokenizador trigram (migração 10; consultas com menos de 3 caracteres usam LIKE) e filtro por intervalo da data de início (`?from=`/`?to=`).
-- Implementar Focus com marcação manual e itens relevantes por regras explícitas de data; distinguir inclusão manual da relevância automática e permitir remover da Focus.
-- Organizar a visão de Focus por grupos úteis, como próximas ações e itens Someday que merecem revisão, sem alterar o estado original.
-- Implementar filtros combináveis por lista, área, tag/contexto, contato, energia, tempo, início, deadline e projeto; mostrar filtros ativos como chips removíveis.
-- Implementar busca global em títulos e notas, inicialmente com SQLite FTS5 quando adequado.
-- Oferecer ordenação por prazo, agrupamento e modos de densidade/lista; exibir atrasos e contagens de atenção sem tratar deadline como data de início.
-- Exibir contagens por lista e um filtro global de áreas, com opção de incluir itens sem área.
-- Criar visão de ações possíveis por contexto, energia e tempo disponível.
+- **Implementado:** Focus manual e automático por prazo; filtros combináveis por energia, tempo, contato, projeto, tag, prazo, área e intervalo de início; chips removíveis, ordenação por prazo, contagens e filtros de ações possíveis.
+- **Busca:** FTS5 com tokenizador trigram (migração 10), incluindo títulos e notas; consultas menores que três caracteres usam `LIKE`. Também pesquisa projetos e tags.
 
 **Critério de saída:** o usuário consegue selecionar ações possíveis para o contexto atual e encontra itens por texto e metadados.
 
@@ -129,31 +115,14 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 - **Implementado:** lista de projetos (`/projects`) por estado com destaque "sem próxima ação"; detalhe com ações agrupadas por estado (Próximas ações, Aguardando, Depois…, Concluídas); modo sequencial/paralelo por projeto (migração v4; no sequencial só a primeira ação aberta aparece em Próximas e Foco); concluir e reabrir projetos (Diário lista projetos concluídos); revisão semanal guiada em `/review` (Inbox, projetos, Próximas, Aguardando, Agendadas, Algum dia); retenção do Diário configurável em `/settings` (0 = guardar tudo); exclusão definitiva individual e "Esvaziar lixeira" com confirmação; seleção múltipla (concluir, mover, tag, Foco, excluir, restaurar).
 - **Implementado depois:** enviar projeto à lixeira (leva as ações abertas; restaurar e excluir definitivamente na Lixeira e na página do projeto; "Esvaziar lixeira" inclui projetos) e edição em lote de prazo, início, energia e tempo.
 - **Implementado depois:** a retenção do Diário também apaga projetos concluídos antigos sem ações vinculadas.
-- Exibir lista de projetos e detalhe com resultado desejado, notas, tags/área e ações agrupadas por estado, incluindo a seção de próxima ação.
-- Implementar modo sequencial (só a próxima ação fica disponível) e paralelo (ações podem avançar independentemente); persistir o modo por projeto.
-- Permitir encaminhar projetos para Later, Scheduled e Someday e reativá-los sem perder ações ou histórico.
-- Destacar projetos ativos sem próxima ação para facilitar a revisão.
-- Criar fluxo guiado de revisão semanal que percorra Inbox, projetos, Next, Waiting, Scheduled e Someday.
-- Registrar conclusão sem apagar o histórico; itens concluídos aparecem no Logbook, cuja retenção/frequência de coleta é configurável.
-- Implementar lixeira com restauração e exclusão permanente explícita.
-- Suportar seleção múltipla para mover, etiquetar, concluir e editar vários itens.
-- Permitir revisão de tarefas concluídas relacionadas a projetos sem fazê-las reaparecer como ações abertas.
+- **Outros comportamentos implementados:** projetos em Later/Someday aparecem como inativos; opção de mostrar/ocultar na lateral; ações agrupadas por estado com limite de exibição por grupo; próxima ação pode ser criada inline na revisão semanal.
 
 **Critério de saída:** o app suporta o ciclo capturar, esclarecer, organizar, refletir e engajar, mantendo histórico recuperável.
 
 ### Fase 5 — Recursos avançados e fluidez
 
 - **Implementado:** checklists por item (editor + progresso ☑ n/m na linha); recorrência diária/semanal/mensal/anual a cada N (ao concluir, a próxima ocorrência é criada uma única vez e a regra migra para ela; exige data); links http(s) nas notas listados no editor; duplicar item (menu e `D`); atalhos de teclado (`1–9/0` navegação, `J/K`, `Enter`, `C`, `*`, `T`, `D`, `Delete`, `?` ajuda; lista também em Preferências › Atalhos); página Referência (`/reference`) com criação, busca e conversão; Preferências com 5 abas + Atalhos, salvas automaticamente na tabela `settings` (`pref.*`): tema, cor de destaque, densidade, formato de data, início da semana, prazos relativos/absolutos, entrada rápida, concluídos ao fim, contadores, posição do Foco, Depois/Aguardando, projetos sequenciais na barra, atribuir área ao sair da Entrada, itens sem área sob filtro, retenção do Diário.
-- **Implementado depois:** inglês (en-US) e links clicáveis (🔗 domínio) na linha do item; (recorrência por dias da semana, “após conclusão” e fim por data/contagem já implementados: `unit:every;wd=1,3;after=1;until=AAAA-MM-DD;count=N`).
-
-- Adicionar checklists vinculadas a tarefas e outros itens compatíveis.
-- Implementar tarefas recorrentes com geração previsível e sem duplicação acidental.
-- Adicionar links nas notas.
-- Implementar duplicação e cópia de tarefas.
-- Completar atalhos de teclado para listas e destinos de criação, busca, Focus, conclusão e gerenciamento de tags; documentar os atalhos na interface.
-- Adicionar entrada rápida e operações de lote.
-- Criar listas de referência com itens próprios, busca e conversão de itens existentes.
-- Implementar preferências persistidas: tema claro/escuro/sistema, paleta de destaque e densidade; idioma e formato de data, primeiro dia da semana, apresentação de vencimentos, exibição da captura rápida, retenção do Logbook, posição da Focus, visibilidade de Later/Waiting, contagens da sidebar e opções de área/projeto.
+- **Implementado depois:** inglês (en-US); links clicáveis com domínio na linha do item; recorrência por dias da semana, contagem a partir da conclusão e término por data ou número de ocorrências. A regra é serializada no formato `unit:every;wd=1,3;after=1;until=AAAA-MM-DD;count=N`.
 
 **Critério de saída:** tarefas repetitivas, checklists e navegação rápida funcionam em desktop, sem degradar os fluxos móveis.
 
@@ -163,12 +132,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 - **Avaliado e adiado:** assistente de IA e MCP. Só entram com consentimento explícito por recurso, escopo de leitura/escrita por lista, aviso do que é enviado ao provedor e registro de uso; ficam para depois de definir provedor.
 - **Limitações:** o serviço de recebimento de email é externo (o app não abre porta SMTP); o campo "From" pode ser forjado, por isso o token é a proteção principal; importar exige mesma versão de schema do arquivo.
 
-- Exportar dados, incluindo itens ativos, projetos, notas, referências, relações e histórico relevante.
-- Importar um arquivo exportado e validar os dados antes de modificar o banco.
-- Oferecer cópia para clipboard e impressão de listas.
-- Capturar tarefas para Inbox por email, com assunto como título e corpo como notas; definir serviço de recebimento e proteção contra remetentes não autorizados.
-- Enviar email periódico da lista Focus nos dias e horários configurados; definir SMTP ou serviço de envio e política de falhas.
-- Avaliar assistente de IA e integração MCP como recursos opcionais posteriores, com controle explícito de permissões e divulgação de dados enviados a serviços externos.
+- **Ainda em avaliação:** assistente de IA e integração MCP como recursos opcionais, com controle explícito de permissões e divulgação de dados enviados a serviços externos.
 
 **Critério de saída:** dados podem ser movidos e recursos que dependem de serviços externos têm configuração segura, documentada e testada.
 
@@ -199,7 +163,7 @@ O catálogo abaixo combina os recursos do produto com os fluxos representados na
 - Revisão semanal, conclusão, Logbook, restauração e lixeira.
 - Exportação/importação, impressão e cópia para clipboard.
 - Preferências de aparência, idioma/data, workflow, sidebar, Logbook e comportamento de áreas/projetos.
-- Recorrência, assistente de IA e MCP como capacidades posteriores e opcionais.
+- Recorrência avançada está implementada; assistente de IA e MCP permanecem opcionais e ainda não implementados.
 - Sincronização de dispositivos via servidor central: a mesma base SQLite atende todos os clientes conectados; não é necessário implementar um protocolo de sincronização entre bancos locais no MVP.
 
 Recursos de assinatura, limites comerciais e planos Basic/Pro não se aplicam ao uso pessoal inicial e ficam fora do escopo. Colaboração e compartilhamento de listas também ficam fora do MVP.
@@ -232,7 +196,7 @@ Uma feature só está concluída quando:
 
 - `main` contém versões estáveis.
 - `develop` integra features prontas para validação.
-- Cada feature futura é implementada em `feature/<nome-curto>`, criada a partir de `develop`; primeiro ancorar `main` e `develop` no histórico existente.
+- Cada feature futura é implementada em `feature/<nome-curto>`, criada a partir de `develop`.
 - Correções urgentes de produção podem usar `hotfix/<nome-curto>` criada a partir de `main`.
 - Preparação de releases pode usar `release/<versão>` quando houver implantação contínua definida.
 - Manter commits claros e assinados conforme a configuração local do Git.
@@ -240,12 +204,9 @@ Uma feature só está concluída quando:
 
 ## Dependências e decisões ainda abertas
 
-- Escolher a distribuição Linux e o método de execução do serviço na máquina (systemd recomendado para instalação nativa).
-- Escolher a solução de HTTPS para o hostname da VPN e então habilitar cookies `secure`.
-- Escolher o destino externo de backups e a forma de criptografia e retenção dessas cópias.
-- Definir política de limite de tentativas e recuperação da conta sem comprometer a instalação pessoal.
+- Implantar na máquina de produção conforme `docs/OPERACAO.md`: configurar distribuição/usuário, hostname e VPN, HTTPS/certificados, destino e política de retenção externa de backups; testar restauração em instalação limpa.
 - Se email entrar no escopo, escolher serviço de recebimento e envio.
-- Se IA/MCP entrar no escopo, decidir provedor e limites de acesso aos dados.
+- Se IA/MCP entrar no escopo, decidir provedor e limites de acesso aos dados antes de implementar.
 - Usar `template/` como referência funcional e visual do usuário; resolver ambiguidades de comportamento durante a implementação, sem exigir reprodução literal da identidade visual capturada.
 
 ## Fontes consultadas
@@ -257,6 +218,7 @@ Uma feature só está concluída quando:
 - Página do projeto: exibição padrão compacta (checkbox, título, seta); clicar no título ou na seta abre o editor detalhado (Salvar/Cancelar). Itens podem ser arrastados para a barra lateral.
 
 - Objetivos (migração 5): tabelas `goals` e `goal_links` (vínculo com ação ou projeto). Sidebar abaixo de Projetos, páginas `/goals` e `/goals/[id]`, `GoalPicker` nos editores de ação e projeto. Lógica em `src/lib/gtd/goals.ts`.
+- Objetivos podem ter uma área (migração 9); a área aparece na lista e no detalhe com a cor configurada. O filtro global de área também filtra objetivos no menu lateral e em `/goals`.
 - Próximas/Depois: em projetos paralelos só as 3 primeiras ações aparecem, com "Mostrar mais N ação(ões)" / "Mostrar menos" (`limitPerProject` em `ItemList.svelte`).
 - Kanban (migração 6): tabelas `boards`, `board_columns`, `board_cards`; vários quadros salvos, na barra lateral acima de Projetos. Agrupamento por estado, projeto, área ou colunas personalizadas; colunas renomeáveis; filtro por projeto; mover por arrastar ou seletor. Lógica em `src/lib/gtd/kanban.ts`, páginas `/kanban` e `/kanban/[id]`.
 
@@ -265,3 +227,4 @@ Uma feature só está concluída quando:
 - Calendário e Kanban ficam agrupados em "Visualizações" na barra lateral. Cada área pode ter uma cor de destaque (migração 7), mostrada como faixa nas linhas de item e ao lado do filtro de área.
 - Projetos em "Depois" ou "Algum dia" são inativos: aparecem em "Projetos (inativos)" nas listas Depois e Algum dia e, na barra lateral, após os ativos, com o link "mostrar/ocultar projetos inativos" (preferência local). Limite de 10 ações por grupo de estado na página do projeto; a revisão semanal permite adicionar a próxima ação inline.
 - "Gerenciar tags…" (⚙) abre um diálogo com abas Áreas/Contatos/Contextos: criar, renomear, excluir e escolher cor (migração 8 adiciona `color` a tags e contatos). A área de itens e projetos não tem mais seletor próprio: digite o nome da área no campo de tags (`resolveTagField`). Nos campos de tags: `@` pessoa, `!` área, `#` contexto (sem prefixo mostra tudo); nomes novos são criados no salvar (`resolveTagField`, componente `TagInput`).
+- As tags de contexto na lateral usam a cor configurada. Objetivos podem ter apenas uma área, definida por `!` no campo de tags; a cor da área aparece no chip do objetivo.
