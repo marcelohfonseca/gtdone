@@ -32,6 +32,7 @@ export const load: LayoutServerLoad = ({ cookies, url }) => {
 		filter,
 		boards: listBoards(db).map((b) => ({ id: b.id, name: b.name })),
 		goals: listGoals(db).map((g) => ({ id: g.id, name: g.name })),
+		sidebarGoals: listGoals(db, ['active'], filter.area).map((g) => ({ id: g.id, name: g.name })),
 		goalLinks: goalIdsByTarget(db),
 		sidebarProjects: listProjects(db, ['active'], filter).map((p) => ({
 			id: p.id,

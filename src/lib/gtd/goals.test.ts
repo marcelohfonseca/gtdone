@@ -70,4 +70,14 @@ describe('área do objetivo', () => {
 		db.prepare('DELETE FROM areas WHERE id = ?').run(area);
 		expect(getGoal(db, id).areaId).toBeNull();
 	});
+
+	it('filtra a listagem por área', () => {
+		const db = memDb();
+		const area = createNamed(db, 'areas', 'Saúde');
+		createGoal(db, { name: 'A', areaId: area });
+		createGoal(db, { name: 'B' });
+		expect(listGoals(db, ['active'], area).map((g) => g.name)).toEqual(['A']);
+		expect(listGoals(db, ['active'], 'none').map((g) => g.name)).toEqual(['B']);
+		expect(listGoals(db, ['active']).length).toBe(2);
+	});
 });

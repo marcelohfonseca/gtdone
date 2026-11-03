@@ -53,11 +53,23 @@ function cleanName(v: unknown): string {
 	return n;
 }
 
-export function listGoals(db: DatabaseSync, statuses: GoalStatus[] = ['active']): Goal[] {
+// area: id filtra por essa área, 'none' só os sem área, null/undefined não filtra.
+export function listGoals(
+	db: DatabaseSync,
+	statuses: GoalStatus[] = ['active'],
+	area: number | 'none' | null = null
+): Goal[] {
 	const marks = statuses.map(() => '?').join(',');
+	const params: (string | number)[] = [...statuses];
+	let where = `g.status IN (${marks})`;
+	if (area === 'none') where += ' AND g.area_id IS NULL';
+	else if (area != null) {
+		where += ' AND g.area_id = ?';
+		params.push(area);
+	}
 	return db
-		.prepare(`${SELECT} WHERE g.status IN (${marks}) ORDER BY g.due_at IS NULL, g.due_at, g.name COLLATE NOCASE`)
-		.all(...statuses)
+		.prepare(`${SELECT} WHERE ${where} ORDER BY g.due_at IS NULL, g.due_at, g.name COLLATE NOCASE`)
+		.all(...params)
 		.map(map);
 }
 

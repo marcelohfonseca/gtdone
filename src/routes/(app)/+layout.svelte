@@ -300,7 +300,7 @@
 				</button>
 			{/if}
 			<h4><a class="h4link" href="/goals">{t('Objetivos')}</a></h4>
-			{#each data.goals as g (g.id)}
+			{#each data.sidebarGoals as g (g.id)}
 				<a href={`/goals/${g.id}`} class:active={path === `/goals/${g.id}`}>
 					<span class="icon">🎯</span>
 					<span class="label">{g.name}</span>
