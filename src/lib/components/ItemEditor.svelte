@@ -162,7 +162,7 @@
 	<div class="cols">
 	<div class="main">
 	<input name="title" value={item.title} required aria-label={t('Título')} disabled={readOnly} />
-	<TagInput bind:value={tagText} {areas} {contacts} {tags} disabled={readOnly} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} />
+	<TagInput bind:value={tagText} {areas} {contacts} {tags} removableBadges disabled={readOnly} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} />
 	<textarea name="notes" rows="6" placeholder={t('Notas')} disabled={readOnly}>{item.notes}</textarea>
 	{#if links.length}
 		<p class="links">

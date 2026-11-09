@@ -165,6 +165,7 @@ export const EN_UI: Record<string, string> = {
 	'Remover passo': 'Remove step',
 	'Novo passo (Enter para adicionar)': 'New step (Enter to add)',
 	Tags: 'Tags',
+	'Remover tag {name}': 'Remove tag {name}',
 	'tag1, tag2': 'tag1, tag2',
 	Tempo: 'Time',
 	Energia: 'Energy',
