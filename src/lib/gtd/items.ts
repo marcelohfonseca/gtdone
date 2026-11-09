@@ -620,7 +620,7 @@ const SEQUENTIAL = ` AND (i.project_id IS NULL OR p.execution_mode = 'parallel' 
 	SELECT i2.id FROM items i2 WHERE i2.project_id = i.project_id AND i2.kind = 'task'
 	AND i2.state NOT IN ('completed', 'trash', 'inbox') ORDER BY i2.position, i2.id LIMIT 1))`;
 
-// Focus = marcadas com estrela (manual) + próximas ações vencidas ou com prazo hoje (automático).
+// Focus = estrelas, tarefas vencidas e próximas ações com prazo hoje (automático).
 export function listItems(
 	db: DatabaseSync,
 	list: ListName,
@@ -640,9 +640,10 @@ export function listItems(
 			order = 'i.updated_at DESC, i.id DESC';
 			break;
 		case 'focus':
-			where = `(i.starred = 1 OR (i.state = 'next' AND i.due_at IS NOT NULL AND i.due_at <= ?))
+			where = `(i.starred = 1 OR (i.kind = 'task' AND i.due_at IS NOT NULL AND i.due_at < ?)
+				OR (i.state = 'next' AND i.due_at = ?))
 				AND i.state NOT IN ('completed', 'trash')${ACTIONABLE}${SEQUENTIAL}`;
-			params.push(today);
+			params.push(today, today);
 			break;
 		case 'inbox':
 			where = "i.state = 'inbox'";
@@ -738,7 +739,7 @@ export function countItems(db: DatabaseSync, filter: ViewFilter, today: number):
 		inbox: count('inbox').length,
 		waiting: count('waiting').length,
 		focus: focus.length,
-		overdue: focus.filter((i) => i.dueAt != null && i.dueAt < today).length,
+		overdue: focus.filter((i) => i.kind === 'task' && i.dueAt != null && i.dueAt < today).length,
 		lists: Object.fromEntries(STATE_LISTS.map((l) => [l, count(l).length])) as Counts['lists']
 	};
 }

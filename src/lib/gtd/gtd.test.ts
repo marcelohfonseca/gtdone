@@ -130,16 +130,18 @@ describe('itens', () => {
 });
 
 describe('engajar', () => {
-	it('Focus inclui próximas vencidas/de hoje automaticamente', () => {
+	it('Focus inclui estrelas, tarefas vencidas e próximas para hoje', () => {
 		const db = memDb();
 		const manual = captureItem(db, { title: 'm', state: 'next', starred: true }, TODAY);
 		const late = captureItem(db, { title: 'l', state: 'next', dueAt: TODAY - DAY }, TODAY);
 		const todayItem = captureItem(db, { title: 't', state: 'next', dueAt: TODAY }, TODAY);
 		captureItem(db, { title: 'futuro', state: 'next', dueAt: TODAY + DAY }, TODAY);
-		captureItem(db, { title: 'espera', state: 'waiting', dueAt: TODAY - DAY }, TODAY);
+		const waitingLate = captureItem(db, { title: 'espera', state: 'waiting', dueAt: TODAY - DAY }, TODAY);
+		const somedayLate = captureItem(db, { title: 'algum dia', state: 'someday', dueAt: TODAY - DAY }, TODAY);
+		captureItem(db, { title: 'referência vencida', kind: 'reference', state: 'someday', dueAt: TODAY - DAY }, TODAY);
 		const ids = listItems(db, 'focus', undefined, TODAY).map((i) => i.id);
-		expect(ids.sort()).toEqual([manual, late, todayItem].sort());
-		expect(countItems(db, { area: null, tagId: null }, TODAY)).toMatchObject({ focus: 3, overdue: 1 });
+		expect(ids.sort()).toEqual([manual, late, todayItem, waitingLate, somedayLate].sort());
+		expect(countItems(db, { area: null, tagId: null }, TODAY)).toMatchObject({ focus: 5, overdue: 3 });
 	});
 
 	it('combina filtros de energia, tempo, contato, prazo e ordena por prazo', () => {

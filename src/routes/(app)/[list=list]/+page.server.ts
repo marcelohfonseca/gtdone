@@ -1,11 +1,12 @@
 import { listItems } from '#lib/gtd/items.ts';
 import { LIST_META, type ListName, type StateList } from '#lib/gtd/core.ts';
+import { parseFocusView, parseItemGrouping } from '#lib/gtd/list-view.ts';
 import { listProjects } from '#lib/gtd/projects.ts';
 import { appActions } from '#lib/server/actions.ts';
 import { getDb } from '#lib/server/db.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, url }) => {
 	const { filter, today } = await parent();
 	const list = params.list as ListName;
 	const db = getDb();
@@ -17,9 +18,18 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		logbook: ['completed'],
 		trash: ['trash']
 	};
-	const items = listItems(db, list, filter, today);
+	const focusView = parseFocusView(url.searchParams.get('view'));
+	const allItems = listItems(db, list, filter, today);
+	const items =
+		list !== 'focus' || focusView === 'both'
+			? allItems
+			: focusView === 'starred'
+				? allItems.filter((item) => item.starred)
+				: allItems.filter((item) => item.kind === 'task' && item.dueAt != null && item.dueAt < today);
 	return {
 		list,
+		groupBy: parseItemGrouping(url.searchParams.get('group')),
+		focusView,
 		meta: LIST_META[list],
 		items,
 		groupedProjects: projectStates[list]

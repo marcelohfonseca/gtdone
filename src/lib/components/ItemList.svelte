@@ -4,7 +4,7 @@
 	import { LIST_META, STATE_LISTS } from '#lib/gtd/core.ts';
 	import { scheduleBucket } from '#lib/calendar.ts';
 	import ItemRow from './ItemRow.svelte';
-	import { TIME_OPTIONS, copyText, itemsAsText } from '#lib/format.ts';
+	import { ENERGY_LABEL, TIME_OPTIONS, copyText, itemsAsText, minutesLabel } from '#lib/format.ts';
 	import { usePrefs, useT } from '#lib/prefs-context.ts';
 
 	type Named = { id: number; name: string; color?: string | null };
@@ -25,8 +25,8 @@
 		areas: Named[];
 		contacts: Named[];
 		tags: Named[];
-		groupBy?: 'none' | 'project' | 'contact' | 'focus' | 'state' | 'schedule';
-		// Em grupos de projeto ou de estado, mostra só as primeiras N ações de cada grupo até o usuário expandir (0 = sem limite).
+		groupBy?: 'none' | 'project' | 'contact' | 'focus' | 'state' | 'schedule' | 'context' | 'time' | 'energy';
+		// Em grupos de projeto, estado, contexto, tempo ou energia, limita cada grupo até o usuário expandir (0 = sem limite).
 		limitPerGroup?: number;
 		emptyText: string;
 	} = $props();
@@ -72,6 +72,39 @@
 				.map(([key, title, test]) => ({ key, title, href: null, items: items.filter(test) }))
 				.filter((g) => g.items.length > 0);
 		}
+		if (groupBy === 'context' || groupBy === 'time' || groupBy === 'energy') {
+			const map = new Map<string, Group>();
+			for (const it of items) {
+				let values: { key: string; title: string }[];
+				if (groupBy === 'context') {
+					values = it.tags.length
+						? it.tags.map((tag) => ({ key: `context:${tag}`, title: tag }))
+						: [{ key: 'none', title: t('Sem contexto') }];
+				} else if (groupBy === 'time') {
+					values = it.minutes == null
+						? [{ key: 'none', title: t('Sem estimativa') }]
+						: [{ key: `time:${it.minutes}`, title: minutesLabel(it.minutes) }];
+				} else {
+					values = it.energy == null
+						? [{ key: 'none', title: t('Sem energia') }]
+						: [{ key: `energy:${it.energy}`, title: t(ENERGY_LABEL[it.energy]) }];
+				}
+				for (const { key, title } of values) {
+					if (!map.has(key)) map.set(key, { key, title, href: null, items: [] });
+					map.get(key)!.items.push(it);
+				}
+			}
+			return [...map.values()].sort((a, b) => {
+				if (a.key === 'none') return -1;
+				if (b.key === 'none') return 1;
+				if (groupBy === 'time') return Number(a.key.slice(5)) - Number(b.key.slice(5));
+				if (groupBy === 'energy') {
+					const order = ['low', 'medium', 'high'];
+					return order.indexOf(a.key.slice(7)) - order.indexOf(b.key.slice(7));
+				}
+				return a.title!.localeCompare(b.title!);
+			});
+		}
 		const map = new Map<string, Group>();
 		for (const it of items) {
 			const byProject = groupBy === 'project';
@@ -100,10 +133,12 @@
 	let arg = $state('next');
 	let dragId: number | null = null;
 	let expanded = $state<string[]>([]);
+	const limitedGrouping = $derived(
+		limitPerGroup > 0 && ['project', 'state', 'context', 'time', 'energy'].includes(groupBy)
+	);
 
 	function visible(group: Group): Item[] {
-		const limited = limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state');
-		return limited && !expanded.includes(group.key) ? group.items.slice(0, limitPerGroup) : group.items;
+		return limitedGrouping && !expanded.includes(group.key) ? group.items.slice(0, limitPerGroup) : group.items;
 	}
 
 	async function reorder(group: Group, ids: number[]) {
@@ -251,11 +286,11 @@
 				</div>
 			</div>
 		{/each}
-		{#if group.items.length > visible(group).length}
+		{#if limitedGrouping && group.items.length > visible(group).length}
 			<button class="ghost more" onclick={() => (expanded = [...expanded, group.key])}>
 				{t('Mostrar mais {n} ação(ões)', { n: group.items.length - visible(group).length })}
 			</button>
-		{:else if limitPerGroup > 0 && (groupBy === 'project' || groupBy === 'state') && expanded.includes(group.key) && group.items.length > limitPerGroup}
+		{:else if limitedGrouping && expanded.includes(group.key) && group.items.length > limitPerGroup}
 			<button class="ghost more" onclick={() => (expanded = expanded.filter((k) => k !== group.key))}>
 				{t('Mostrar menos')}
 			</button>
