@@ -421,7 +421,7 @@
 				{/if}
 			</div>
 		</header>
-		<main>
+		<main class:wide={path.startsWith('/kanban/')}>
 			{#if data.filter.tagId}
 				<p class="filterbar">
 					{t('Filtrando pela tag')} #{data.tags.find((t) => t.id === data.filter.tagId)?.name}
@@ -818,6 +818,9 @@
 		max-width: 52rem;
 		padding: 1.25rem;
 		margin: 0 auto;
+	}
+	main.wide {
+		max-width: none;
 	}
 	:global(:root[data-content-alignment='left']) main {
 		margin-left: 0;
