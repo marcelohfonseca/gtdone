@@ -40,12 +40,12 @@ cp .env.docker.example .env.docker
 mkdir -p data-docker
 # The container runs as UID 1000 (`node`); make the mounted directory writable:
 sudo chown -R 1000:1000 data-docker
-docker compose up --build -d
+docker compose --env-file .env.docker up --build -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000). To stop the app, run `docker compose down`; the data in `data-docker` is preserved. To update, pull the desired Git revision and run `docker compose up --build -d` again.
+Open [http://localhost:3000](http://localhost:3000). To stop the app, run `docker compose down`; the data in `data-docker` is preserved. To update, pull the desired Git revision and run `docker compose --env-file .env.docker up --build -d` again.
 
-The published port is bound to `127.0.0.1` by default. For VPN-only access, keep that binding and put an HTTPS reverse proxy on the host in front of it; set `ORIGIN` in `.env.docker` to the external HTTPS URL so secure cookies and origin checks work correctly. Do not expose port 3000 directly to the public internet. Back up `data-docker` to another device as described in [docs/OPERACAO.md](docs/OPERACAO.md).
+The published port is bound to `127.0.0.1` by default. For VPN-only access, keep that binding and put an HTTPS reverse proxy on the host in front of it; set `ORIGIN` in `.env.docker` to the external HTTPS URL. The documented Compose command passes it both to the build (for same-origin/CSRF checks) and to the running container (for secure cookies). Do not expose port 3000 directly to the public internet. Back up `data-docker` to another device as described in [docs/OPERACAO.md](docs/OPERACAO.md).
 
 ## Integrations (optional)
 

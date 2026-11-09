@@ -1,5 +1,7 @@
 FROM node:24-alpine AS build
 WORKDIR /app
+ARG ORIGIN=http://localhost:3000
+ENV ORIGIN=${ORIGIN}
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

@@ -1,6 +1,9 @@
 services:
   gtdone:
-    build: .
+    build:
+      context: .
+      args:
+        ORIGIN: ${ORIGIN:-http://localhost:3000}
     restart: unless-stopped
     env_file:
       - .env.docker
