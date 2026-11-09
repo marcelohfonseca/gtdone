@@ -25,12 +25,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		redirect(303, '/');
 	}
 
-	// Aplica idioma, tema e densidade já no HTML do servidor, sem depender da hidratação.
+	// Aplica preferências visuais e idioma no HTML do servidor, sem depender da hidratação.
 	return resolve(event, {
 		transformPageChunk: ({ html }) =>
 			html.replace(
 				'<html lang="en">',
-				`<html lang="${prefs.lang}" data-theme="${prefs.theme}" data-accent="${prefs.accent}" data-density="${prefs.density}">`
+				`<html lang="${prefs.lang}" data-theme="${prefs.theme}" data-accent="${prefs.accent}" data-density="${prefs.density}" data-content-alignment="${prefs.contentAlignment}">`
 			)
 	});
 };

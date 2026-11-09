@@ -38,6 +38,7 @@
 		root.dataset.theme = data.prefs.theme;
 		root.dataset.accent = data.prefs.accent;
 		root.dataset.density = data.prefs.density;
+		root.dataset.contentAlignment = data.prefs.contentAlignment;
 		root.lang = data.prefs.lang;
 	});
 
@@ -719,6 +720,10 @@
 		max-width: 52rem;
 		padding: 1.25rem;
 		margin: 0 auto;
+	}
+	:global(:root[data-content-alignment='left']) main {
+		margin-left: 0;
+		margin-right: auto;
 	}
 	.filterbar {
 		color: var(--muted);

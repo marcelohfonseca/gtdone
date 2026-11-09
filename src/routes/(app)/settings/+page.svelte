@@ -14,6 +14,7 @@
 	function applyNow(el: HTMLInputElement | HTMLSelectElement) {
 		const root = document.documentElement;
 		if (el.name === 'density') root.dataset.density = el.value;
+		else if (el.name === 'contentAlignment') root.dataset.contentAlignment = el.value;
 		else if (el.name === 'accent') root.dataset.accent = el.value;
 		else if (el.name === 'theme') root.dataset.theme = el.value;
 		else if (el.name === 'lang') root.lang = el.value;
@@ -37,7 +38,8 @@
 			label: 'Aparência',
 			fields: [
 				{ key: 'theme', label: 'Tema', options: [['system', 'Seguir o sistema'], ['light', 'Claro'], ['dark', 'Escuro']] },
-				{ key: 'density', label: 'Densidade', options: [['normal', 'Normal'], ['compact', 'Compacta']] }
+				{ key: 'density', label: 'Densidade', options: [['normal', 'Normal'], ['compact', 'Compacta']] },
+				{ key: 'contentAlignment', label: 'Alinhamento do conteúdo', options: [['center', 'Centralizado'], ['left', 'Alinhado à esquerda']] }
 			]
 		},
 		{

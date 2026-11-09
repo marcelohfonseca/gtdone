@@ -21,6 +21,7 @@ export const PREF_DEFS = {
 	theme: { default: 'system', options: ['system', 'light', 'dark'] },
 	accent: { default: 'green', options: ACCENTS },
 	density: { default: 'normal', options: ['normal', 'compact'] },
+	contentAlignment: { default: 'center', options: ['center', 'left'] },
 	dateFormat: { default: 'dmy', options: ['dmy', 'mdy', 'ymd'] },
 	weekStart: { default: 'monday', options: ['monday', 'sunday'] },
 	dueDisplay: { default: 'relative', options: ['relative', 'absolute'] },

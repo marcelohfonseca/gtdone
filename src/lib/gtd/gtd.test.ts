@@ -333,9 +333,11 @@ describe('fase 5', () => {
 	it('preferências: padrões, validação e área sem atribuição', () => {
 		const db = memDb();
 		expect(loadPreferences(db).theme).toBe('system');
-		savePreferences(db, { theme: 'dark', density: 'compact' });
-		expect(loadPreferences(db)).toMatchObject({ theme: 'dark', density: 'compact' });
+		expect(loadPreferences(db).contentAlignment).toBe('center');
+		savePreferences(db, { theme: 'dark', density: 'compact', contentAlignment: 'left' });
+		expect(loadPreferences(db)).toMatchObject({ theme: 'dark', density: 'compact', contentAlignment: 'left' });
 		expect(() => savePreferences(db, { theme: 'neon', accent: 'blue' })).toThrow(GtdError);
+		expect(() => savePreferences(db, { contentAlignment: 'right' })).toThrow(GtdError);
 		expect(loadPreferences(db).accent).toBe('green');
 		const area = createNamed(db, 'areas', 'Casa');
 		captureItem(db, { title: 'Sem área', state: 'next' }, TODAY);
