@@ -105,7 +105,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 ### Fase 3 — Engajar, Focus, filtros e busca
 
-- **Implementado:** Focus manual e automático por prazo; filtros combináveis por energia, tempo, contato, projeto, tag, prazo, área e intervalo de início; chips removíveis, ordenação por prazo, contagens e filtros de ações possíveis.
+- **Implementado:** Focus manual por estrela e automático por tarefas vencidas/prazo de hoje, com visualizações Ambos/Estrelado/Vencido; filtros combináveis por energia, tempo, contato, projeto, tag, prazo, área e intervalo de início; modos de agrupamento por projeto, contexto, tempo e energia em Próximas e Depois; chips removíveis, ordenação por prazo, contagens e filtros de ações possíveis.
 - **Busca:** FTS5 com tokenizador trigram (migração 10), incluindo títulos e notas; consultas menores que três caracteres usam `LIKE`. Também pesquisa projetos e tags.
 
 **Critério de saída:** o usuário consegue selecionar ações possíveis para o contexto atual e encontra itens por texto e metadados.
@@ -121,7 +121,7 @@ As imagens em `template/` definem a organização funcional desejada. Elas serve
 
 ### Fase 5 — Recursos avançados e fluidez
 
-- **Implementado:** checklists por item (editor + progresso ☑ n/m na linha); recorrência diária/semanal/mensal/anual a cada N (ao concluir, a próxima ocorrência é criada uma única vez e a regra migra para ela; exige data); links http(s) nas notas listados no editor; duplicar item (menu e `D`); atalhos de teclado (`1–9/0` navegação, `J/K`, `Enter`, `C`, `*`, `T`, `D`, `Delete`, `?` ajuda; lista também em Preferências › Atalhos); página Referência (`/reference`) com criação, busca e conversão; Preferências com 5 abas + Atalhos, salvas automaticamente na tabela `settings` (`pref.*`): tema, cor de destaque, densidade, formato de data, início da semana, prazos relativos/absolutos, entrada rápida, concluídos ao fim, contadores, posição do Foco, Depois/Aguardando, projetos sequenciais na barra, atribuir área ao sair da Entrada, itens sem área sob filtro, retenção do Diário.
+- **Implementado:** checklists por item (editor + progresso ☑ n/m na linha); recorrência diária/semanal/mensal/anual a cada N (ao concluir, a próxima ocorrência é criada uma única vez e a regra migra para ela; exige data); links http(s) nas notas listados no editor; duplicar item (menu e `D`); atalhos de teclado (`1–9/0` navegação, `J/K`, `Enter`, `C`, `*`, `T`, `D`, `Delete`, `?` ajuda; lista também em Preferências › Atalhos); página Referência (`/reference`) com criação, busca e conversão; Preferências com 5 abas + Atalhos, salvas automaticamente na tabela `settings` (`pref.*`): tema, cor de destaque, densidade, alinhamento do conteúdo, formato de data, início da semana, prazos relativos/absolutos, entrada rápida, concluídos ao fim, contadores, posição do Foco, Depois/Aguardando, projetos sequenciais na barra, atribuir área ao sair da Entrada, itens sem área sob filtro, retenção do Diário.
 - **Implementado depois:** inglês (en-US); links clicáveis com domínio na linha do item; recorrência por dias da semana, contagem a partir da conclusão e término por data ou número de ocorrências. A regra é serializada no formato `unit:every;wd=1,3;after=1;until=AAAA-MM-DD;count=N`.
 
 **Critério de saída:** tarefas repetitivas, checklists e navegação rápida funcionam em desktop, sem degradar os fluxos móveis.
