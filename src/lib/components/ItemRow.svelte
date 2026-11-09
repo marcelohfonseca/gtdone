@@ -171,14 +171,13 @@
 		display: flex;
 		align-items: center;
 		gap: var(--row-gap);
-		padding: var(--row-pad) 0.25rem;
+		padding: var(--row-pad) 0.5rem;
 		font-size: var(--row-font);
 		border-bottom: 1px solid var(--border);
 		position: relative;
 	}
 	.row.colored {
 		box-shadow: inset 3px 0 0 var(--area);
-		padding-left: 0.5rem;
 	}
 	.row.done .title {
 		text-decoration: line-through;
