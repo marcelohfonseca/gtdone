@@ -25,6 +25,11 @@
 	let manageTags = $state(false);
 	let sidebarOpen = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
+	let scheduleDialog: HTMLDialogElement | undefined = $state();
+	let scheduleDateInput: HTMLInputElement | undefined = $state();
+	let scheduleItemId = $state<number | null>(null);
+	let scheduleDate = $state('');
+	let scheduleError = $state('');
 
 	const path = $derived(page.url.pathname);
 	$effect(() => {
@@ -204,6 +209,40 @@
 		if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) clearOver();
 	}
 
+	function tomorrowDateInput() {
+		const date = new Date();
+		date.setDate(date.getDate() + 1);
+		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+	}
+
+	function openScheduleDialog(id: number) {
+		scheduleItemId = id;
+		scheduleDate = tomorrowDateInput();
+		scheduleError = '';
+		if (!scheduleDialog?.open) scheduleDialog?.showModal();
+		if (scheduleDateInput) scheduleDateInput.value = scheduleDate;
+		try {
+			scheduleDateInput?.showPicker();
+		} catch {
+			scheduleDateInput?.focus();
+		}
+	}
+
+	async function scheduleDroppedItem(e: SubmitEvent) {
+		e.preventDefault();
+		if (scheduleItemId == null || !scheduleDate) return;
+		const error = await postAction('move', {
+			id: scheduleItemId,
+			state: 'scheduled',
+			startsAt: scheduleDate
+		});
+		if (error) {
+			scheduleError = translateMessage(data.prefs.lang, error);
+			return;
+		}
+		scheduleDialog?.close();
+	}
+
 	async function dropOnSidebar(e: DragEvent) {
 		const id = Number(e.dataTransfer?.getData(DRAG_TYPE));
 		const target = dropTarget(e)?.dataset.drop;
@@ -211,12 +250,12 @@
 		if (!id || !target) return;
 		e.preventDefault();
 		const [kind, arg] = target.split(':');
-		let err: string | null = null;
 		if (kind === 'state' && arg === 'scheduled') {
-			const date = prompt(t('Data de início (AAAA-MM-DD):'));
-			if (!date) return;
-			err = await postAction('move', { id, state: 'scheduled', startsAt: date });
-		} else if (kind === 'state') err = await postAction('move', { id, state: arg });
+			openScheduleDialog(id);
+			return;
+		}
+		let err: string | null = null;
+		if (kind === 'state') err = await postAction('move', { id, state: arg });
 		else if (kind === 'project') err = await postAction('edit', { id, projectId: arg });
 		else if (kind === 'focus') err = await postAction('star', { id, starred: 1 });
 		else if (kind === 'completed') err = await postAction('complete', { id });
@@ -405,6 +444,26 @@
 
 <Composer bind:mode />
 
+<dialog
+	bind:this={scheduleDialog}
+	class="schedule-dialog"
+	aria-labelledby="schedule-title"
+	onclose={() => { scheduleItemId = null; scheduleError = ''; }}
+>
+	<form class="schedule-form" onsubmit={scheduleDroppedItem}>
+		<h2 id="schedule-title">{t('Agendar para')}</h2>
+		<label class="schedule-date">
+			<span>{t('Data de início')}</span>
+			<input bind:this={scheduleDateInput} type="date" bind:value={scheduleDate} required />
+		</label>
+		{#if scheduleError}<p class="schedule-error" role="alert">{scheduleError}</p>{/if}
+		<div class="schedule-actions">
+			<button type="button" class="ghost" onclick={() => scheduleDialog?.close()}>{t('Cancelar')}</button>
+			<button type="submit">{t('Salvar')}</button>
+		</div>
+	</form>
+</dialog>
+
 {#if manageTags}
 	<div class="overlay" role="presentation" onclick={() => (manageTags = false)}>
 		<div class="help manage" role="dialog" aria-label={t('Gerenciar tags…')} tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === 'Escape') manageTags = false; }}>
@@ -505,6 +564,45 @@
 	.manage {
 		width: min(30rem, 92vw);
 		overflow: visible;
+	}
+	.schedule-dialog {
+		width: min(24rem, calc(100vw - 2rem));
+		max-width: calc(100vw - 2rem);
+		padding: 1rem 1.25rem;
+		background: var(--surface);
+		color: var(--text);
+		border: 1px solid var(--border);
+		border-radius: 0.6rem;
+	}
+	.schedule-dialog::backdrop {
+		background: rgb(0 0 0 / 0.5);
+	}
+	.schedule-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.schedule-form h2 {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+	.schedule-date {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.schedule-date input {
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.schedule-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+	.schedule-error {
+		margin: 0;
+		color: var(--danger);
 	}
 	.help h3 {
 		margin-top: 0;
