@@ -186,7 +186,7 @@ export const EN_UI: Record<string, string> = {
 	Fechar: 'Close',
 	// FilterBar
 	Contato: 'Contact',
-	'Até {n} min': 'Up to {n} min',
+	'Até {n}': 'Up to {n}',
 	'Ordem: prazo': 'Order: due date',
 	Filtros: 'Filters',
 	Qualquer: 'Any',

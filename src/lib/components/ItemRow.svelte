@@ -101,7 +101,7 @@
 		<a class="chip" href={`/projects/${item.projectId}`}>{item.projectName}</a>
 	{/if}
 	{#each item.tags as tag (tag)}<span class="chip tag" class:tinted={tagColor(tag)} style:--tint={tagColor(tag)}>#{tag}</span>{/each}
-	{#if item.minutes}<span class="muted small">{minutesLabel(item.minutes)}</span>{/if}
+	{#if item.minutes}<span class="muted small">{minutesLabel(item.minutes, prefs().lang)}</span>{/if}
 	{#if due}<span class="due" class:late={due.late}>{due.text}</span>{/if}
 	{#if !archived}
 		<button

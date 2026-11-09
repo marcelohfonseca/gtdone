@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { postAction } from '#lib/client/actions.ts';
 	import { toDateInput, parseDateInput, parseRecurrence, serializeRecurrence, LIST_META, STATE_LISTS, type RecurrenceUnit } from '#lib/gtd/core.ts';
-	import { TIME_OPTIONS, extractLinks, recurrenceLabel } from '#lib/format.ts';
+	import { TIME_OPTIONS, extractLinks, minutesLabel, recurrenceLabel } from '#lib/format.ts';
 	import type { Item } from '#lib/gtd/items.ts';
 	import TagInput from './TagInput.svelte';
 	import GoalPicker from './GoalPicker.svelte';
@@ -210,6 +210,9 @@
 			{t('Tempo')}
 			<select name="minutes" disabled={readOnly}>
 				<option value="">—</option>
+				{#if item.minutes != null && !TIME_OPTIONS.some((o) => o.value === item.minutes)}
+					<option value={item.minutes} selected>{minutesLabel(item.minutes, prefs().lang)}</option>
+				{/if}
 				{#each TIME_OPTIONS as o (o.value)}
 					<option value={o.value} selected={item.minutes === o.value}>{o.label}</option>
 				{/each}

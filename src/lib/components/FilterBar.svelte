@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { TIME_OPTIONS, ENERGY_LABEL } from '#lib/format.ts';
+	import { TIME_FILTER_OPTIONS, ENERGY_LABEL } from '#lib/format.ts';
 	import { useT } from '#lib/prefs-context.ts';
 
 	type Named = { id: number; name: string };
@@ -23,10 +23,14 @@
 		return list.find((x) => String(x.id) === id)?.name ?? '?';
 	}
 
+	function timeLabel(value: string) {
+		return TIME_FILTER_OPTIONS.find((o) => o.value === Number(value))?.label ?? `${value} min`;
+	}
+
 	const chips = $derived(
 		[
 			params.get('energy') && ['energy', `${t('Energia')}: ${t(ENERGY_LABEL[params.get('energy') as 'low'])}`],
-			params.get('time') && ['time', t('Até {n} min', { n: params.get('time') ?? '' })],
+			params.get('time') && ['time', t('Até {n}', { n: t(timeLabel(params.get('time') ?? '')) })],
 			params.get('contact') && ['contact', `${t('Contato')}: ${nameOf(contacts, params.get('contact'))}`],
 			params.get('project') && ['project', `${t('Projeto')}: ${nameOf(projects, params.get('project'))}`],
 			params.get('tag') && ['tag', `#${nameOf(tags, params.get('tag'))}`],
@@ -56,7 +60,7 @@
 		<label>{t('Tempo disponível')}
 			<select value={params.get('time') ?? ''} onchange={(e) => set('time', e.currentTarget.value)}>
 				<option value="">{t('Qualquer')}</option>
-				{#each TIME_OPTIONS as o (o.value)}<option value={o.value}>{t('até {n}', { n: o.label })}</option>{/each}
+				{#each TIME_FILTER_OPTIONS as o (o.value)}<option value={o.value}>{t('até {n}', { n: t(o.label) })}</option>{/each}
 			</select>
 		</label>
 		<label>{t('Contato')}

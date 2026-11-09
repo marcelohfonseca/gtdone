@@ -83,7 +83,7 @@
 				} else if (groupBy === 'time') {
 					values = it.minutes == null
 						? [{ key: 'none', title: t('Sem estimativa') }]
-						: [{ key: `time:${it.minutes}`, title: minutesLabel(it.minutes) }];
+						: [{ key: `time:${it.minutes}`, title: minutesLabel(it.minutes, prefs().lang) }];
 				} else {
 					values = it.energy == null
 						? [{ key: 'none', title: t('Sem energia') }]

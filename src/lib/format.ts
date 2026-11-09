@@ -3,15 +3,26 @@ import { translate } from '#lib/i18n/index.ts';
 
 export const TIME_OPTIONS = [
 	{ value: 5, label: '5 min' },
-	{ value: 10, label: '10 min' },
 	{ value: 15, label: '15 min' },
 	{ value: 30, label: '30 min' },
-	{ value: 45, label: '45 min' },
 	{ value: 60, label: '1 h' },
 	{ value: 120, label: '2 h' },
 	{ value: 240, label: '4 h' },
-	{ value: 480, label: '8 h' }
+	{ value: 1440, label: '1 d' },
+	{ value: 2880, label: '2 d' },
+	{ value: 4320, label: '3 d' },
+	{ value: 10080, label: '1 wk' },
+	{ value: 20160, label: '2 wk' },
+	{ value: 30240, label: '3+ wk' }
 ];
+
+export const TIME_FILTER_OPTIONS = [
+	...TIME_OPTIONS.slice(0, -1),
+	{ value: 10, label: '10 min' },
+	{ value: 45, label: '45 min' },
+	{ value: 480, label: '8 h' },
+	{ value: 30240, label: '3 wk' }
+].sort((a, b) => a.value - b.value);
 
 export const ENERGY_LABEL = { low: 'Baixa', medium: 'Média', high: 'Alta' } as const;
 
@@ -39,8 +50,10 @@ export function dueInfo(
 	return { text: formatDay(due, opts.format), late: false };
 }
 
-export function minutesLabel(m: number | null): string {
+export function minutesLabel(m: number | null, lang = 'pt-BR'): string {
 	if (m == null) return '';
+	const option = TIME_OPTIONS.find((o) => o.value === m);
+	if (option) return translate(lang, option.label);
 	return m >= 60 && m % 60 === 0 ? `${m / 60} h` : `${m} min`;
 }
 
