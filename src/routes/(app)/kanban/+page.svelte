@@ -26,7 +26,7 @@
 <svelte:head><title>Kanban · GTDone</title></svelte:head>
 
 <h1>🗂️ Kanban</h1>
-<p class="muted">{t('Quadros com as suas ações. Crie várias visões, cada uma com seu agrupamento, colunas e filtro de projeto.')}</p>
+<p class="subtitle muted">{t('Quadros com as suas ações. Crie várias visões, cada uma com seu agrupamento, colunas e filtro de projeto.')}</p>
 
 <form class="add" onsubmit={create}>
 	<input bind:value={name} placeholder={t('Novo quadro… (Enter para criar)')} aria-label={t('Novo quadro')} required />
@@ -50,6 +50,14 @@
 </ul>
 
 <style>
+	h1 {
+		margin: 0;
+		font-size: 1.5rem;
+	}
+	.subtitle {
+		margin: 0.2rem 0 1rem;
+		font-size: 0.9rem;
+	}
 	.add {
 		display: flex;
 		gap: 0.5rem;

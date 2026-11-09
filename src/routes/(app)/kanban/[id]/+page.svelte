@@ -171,9 +171,11 @@
 		display: flex;
 		align-items: center;
 		gap: 1rem;
+		margin-bottom: 1rem;
 	}
 	.head h1 {
 		margin: 0;
+		font-size: 1.5rem;
 	}
 	.panel {
 		background: var(--surface);
