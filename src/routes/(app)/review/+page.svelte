@@ -87,13 +87,10 @@
 </div>
 
 <style>
-	h1 {
-		margin: 0.5rem 0 0;
-	}
 	.step,
 	.muted {
 		color: var(--muted);
-		font-size: 0.9rem;
+		font-size: 0.92rem;
 	}
 	progress {
 		width: 100%;
@@ -106,7 +103,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
-		padding: 0.55rem 0;
+		padding: 0.6rem 0;
 		border-bottom: 1px solid var(--border);
 	}
 	li.stalled {
@@ -119,7 +116,7 @@
 	}
 	.head {
 		display: flex;
-		gap: 0.6rem;
+		gap: 0.75rem;
 		align-items: center;
 	}
 	.add {
@@ -131,8 +128,8 @@
 		font-size: 0.85rem;
 	}
 	.chip {
-		font-size: 0.7rem;
-		padding: 0.1rem 0.5rem;
+		font-size: 0.8rem;
+		padding: 0.15rem 0.55rem;
 		border-radius: 1rem;
 		background: var(--surface-2);
 		color: var(--muted);

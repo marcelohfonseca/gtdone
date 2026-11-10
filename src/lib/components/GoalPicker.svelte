@@ -32,8 +32,8 @@
 	label {
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
-		font-size: 0.75rem;
+		gap: 0.3rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.error {

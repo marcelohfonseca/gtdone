@@ -26,14 +26,3 @@
 	contacts={data.contacts}
 	tags={data.tags}
 />
-
-<style>
-	h1 {
-		margin: 0;
-		font-size: 1.5rem;
-	}
-	.subtitle {
-		margin: 0.2rem 0 1rem;
-		color: var(--muted);
-	}
-</style>

@@ -34,10 +34,12 @@ export const load: LayoutServerLoad = ({ cookies, url }) => {
 		goals: listGoals(db).map((g) => ({ id: g.id, name: g.name })),
 		sidebarGoals: listGoals(db, ['active'], filter.area).map((g) => ({ id: g.id, name: g.name })),
 		goalLinks: goalIdsByTarget(db),
-		sidebarProjects: listProjects(db, ['active'], filter).map((p) => ({
+		sidebarProjects: listProjects(db, ['active'], filter, today).map((p) => ({
 			id: p.id,
 			name: p.name,
 			openCount: p.openCount,
+			overdueCount: p.overdueCount,
+			stalled: p.stalled,
 			sequential: p.executionMode === 'sequential'
 		})),
 		inactiveProjects: listProjects(db, ['later', 'someday'], filter).map((p) => ({ id: p.id, name: p.name })),

@@ -172,6 +172,18 @@ describe('engajar', () => {
 });
 
 describe('projetos e encerramento', () => {
+	it('conta apenas tarefas abertas e vencidas por projeto', () => {
+		const db = memDb();
+		const p = createProject(db, { name: 'P' }, TODAY);
+		captureItem(db, { title: 'atrasada', state: 'next', projectId: p, dueAt: TODAY - DAY }, TODAY);
+		captureItem(db, { title: 'aguardando atrasada', state: 'waiting', projectId: p, dueAt: TODAY - DAY }, TODAY);
+		captureItem(db, { title: 'vence hoje', state: 'next', projectId: p, dueAt: TODAY }, TODAY);
+		captureItem(db, { title: 'referência atrasada', kind: 'reference', projectId: p, dueAt: TODAY - DAY }, TODAY);
+		const done = captureItem(db, { title: 'concluída atrasada', state: 'next', projectId: p, dueAt: TODAY - DAY }, TODAY);
+		completeItem(db, done);
+		expect(listProjects(db, ['active'], undefined, TODAY)[0].overdueCount).toBe(2);
+	});
+
 	it('projeto sequencial expõe só a primeira ação e destaca projetos sem próxima', () => {
 		const db = memDb();
 		const p = createProject(db, { name: 'S', executionMode: 'sequential' }, TODAY);

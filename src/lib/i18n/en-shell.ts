@@ -62,7 +62,7 @@ export const EN_SHELL: Record<string, string> = {
 	'Manter na posição': 'Keep in place',
 	'Barra lateral': 'Sidebar',
 	Contadores: 'Counters',
-	'Padrão mostra só o que pede atenção (Entrada, Aguardando, Foco).': 'Default shows only what needs attention (Inbox, Waiting, Focus).',
+	'Padrão mostra Entrada, Aguardando, Foco e itens vencidos em Projetos.': 'Default shows Inbox, Waiting, Focus, and overdue project items.',
 	Padrão: 'Default',
 	'Mostrar todos': 'Show all',
 	'Posição do Foco': 'Focus position',

@@ -11,9 +11,3 @@
 
 <h1>{t('Gerenciar tags…')}</h1>
 <ManageTags areas={data.areas} contacts={data.contacts} tags={data.tags} initial={data.kind} />
-
-<style>
-	h1 {
-		margin-top: 0;
-	}
-</style>

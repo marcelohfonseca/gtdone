@@ -323,8 +323,8 @@
 	.editor {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6rem;
-		padding: 0.75rem;
+		gap: 0.75rem;
+		padding: 1rem;
 		background: var(--surface-2);
 		border-radius: 0.5rem;
 		margin: 0.25rem 0 0.5rem;
@@ -358,8 +358,8 @@
 	label {
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
-		font-size: 0.75rem;
+		gap: 0.3rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.statebox {
@@ -373,7 +373,7 @@
 		color: var(--text);
 		border: 1px solid var(--border);
 		font: inherit;
-		font-size: 0.9rem;
+		font-size: 0.95rem;
 		padding: 0.45rem 0.6rem;
 		border-radius: 6px;
 		cursor: pointer;
@@ -405,7 +405,7 @@
 		align-items: center;
 		gap: 0.4rem;
 		padding: 0.3rem 0.5rem;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		color: var(--text);
 		border-radius: 4px;
 	}
@@ -424,8 +424,8 @@
 		color: var(--muted);
 	}
 	.mhead {
-		padding: 0.3rem 0.5rem 0.1rem;
-		font-size: 0.7rem;
+		padding: 0.4rem 0.6rem 0.15rem;
+		font-size: 0.8rem;
 		font-style: italic;
 		color: var(--muted);
 	}
@@ -444,8 +444,8 @@
 		flex-wrap: wrap;
 	}
 	.day {
-		padding: 0.1rem 0.4rem;
-		font-size: 0.72rem;
+		padding: 0.2rem 0.45rem;
+		font-size: 0.8rem;
 		border-radius: 0.3rem;
 	}
 	.day.on {
@@ -453,7 +453,7 @@
 		color: #fff;
 	}
 	.cap {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.checklist {
@@ -475,7 +475,7 @@
 	}
 	.links {
 		margin: 0;
-		font-size: 0.8rem;
+		font-size: 0.85rem;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.2rem 0.75rem;

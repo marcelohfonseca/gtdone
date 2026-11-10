@@ -148,9 +148,9 @@
 	label {
 		display: flex;
 		flex-direction: column;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
-		gap: 0.2rem;
+		gap: 0.3rem;
 	}
 	.actions,
 	.status,
@@ -169,9 +169,9 @@
 	}
 	li {
 		display: flex;
-		gap: 0.6rem;
+		gap: 0.75rem;
 		align-items: center;
-		padding: 0.35rem 0;
+		padding: 0.5rem 0;
 		border-bottom: 1px solid var(--border);
 	}
 	.done {

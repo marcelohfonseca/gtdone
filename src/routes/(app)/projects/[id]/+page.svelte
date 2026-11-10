@@ -190,9 +190,9 @@
 	label {
 		display: flex;
 		flex-direction: column;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
-		gap: 0.2rem;
+		gap: 0.3rem;
 	}
 	.actions {
 		display: flex;

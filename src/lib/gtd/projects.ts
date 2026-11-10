@@ -1,5 +1,5 @@
 import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
-import { GtdError } from './core.ts';
+import { GtdError, startOfTodayUtc } from './core.ts';
 import { ensureTagIds, parseTagNames } from './organize.ts';
 import { type ViewFilter, NO_FILTER, getItem, restoreItem } from './items.ts';
 
@@ -18,6 +18,7 @@ export type Project = {
 	completedAt: number | null;
 	tags: string[];
 	openCount: number;
+	overdueCount: number;
 	executionMode: 'parallel' | 'sequential';
 	// Ativo sem nenhuma ação disponível em Próximas.
 	stalled: boolean;
@@ -39,6 +40,8 @@ const SELECT = `
 	SELECT p.*,
 		(SELECT group_concat(t.name, char(31)) FROM project_tags pt JOIN tags t ON t.id = pt.tag_id
 			WHERE pt.project_id = p.id) AS tag_names,
+		(SELECT COUNT(*) FROM items i WHERE i.project_id = p.id AND i.kind = 'task'
+			AND i.state NOT IN ('completed', 'trash') AND i.due_at < ?) AS overdue_count,
 		(SELECT COUNT(*) FROM items i WHERE i.project_id = p.id
 			AND i.state NOT IN ('completed', 'trash')) AS open_count,
 		(SELECT COUNT(*) FROM items i WHERE i.project_id = p.id AND i.kind = 'task'
@@ -62,13 +65,14 @@ function map(r: Record<string, unknown>): Project {
 		completedAt: num(r.completed_at),
 		tags: r.tag_names ? String(r.tag_names).split('\x1f').sort() : [],
 		openCount: Number(r.open_count),
+		overdueCount: Number(r.overdue_count),
 		executionMode: r.execution_mode === 'sequential' ? 'sequential' : 'parallel',
 		stalled: r.state === 'active' && Number(r.next_count) === 0
 	};
 }
 
-export function getProject(db: DatabaseSync, id: number): Project {
-	const r = db.prepare(`${SELECT} WHERE p.id = ?`).get(id);
+export function getProject(db: DatabaseSync, id: number, today = startOfTodayUtc()): Project {
+	const r = db.prepare(`${SELECT} WHERE p.id = ?`).get(today, id);
 	if (!r) throw new GtdError('projeto não encontrado', 404);
 	return map(r);
 }
@@ -132,7 +136,7 @@ export function updateProject(
 	input: ProjectInput,
 	today: number
 ): void {
-	const cur = getProject(db, id);
+	const cur = getProject(db, id, today);
 	if (cur.state === 'completed' || cur.state === 'trash') {
 		throw new GtdError('restaure o projeto antes de editar');
 	}
@@ -161,9 +165,10 @@ export function updateProject(
 export function listProjects(
 	db: DatabaseSync,
 	states: readonly string[] = ['active'],
-	filter: ViewFilter = NO_FILTER
+	filter: ViewFilter = NO_FILTER,
+	today = startOfTodayUtc()
 ): Project[] {
-	const params: SQLInputValue[] = [...states];
+	const params: SQLInputValue[] = [today, ...states];
 	let where = `p.state IN (${states.map(() => '?').join(',')})`;
 	if (filter.area === 'none') where += ' AND p.area_id IS NULL';
 	else if (filter.area != null) {
@@ -214,7 +219,7 @@ export function trashProject(db: DatabaseSync, id: number): void {
 }
 
 export function restoreProject(db: DatabaseSync, id: number, today: number): void {
-	const cur = getProject(db, id);
+	const cur = getProject(db, id, today);
 	if (cur.state !== 'trash') return;
 	const stamp = cur.completedAt;
 	db.exec('BEGIN;');

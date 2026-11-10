@@ -53,14 +53,14 @@
 <style>
 	.rapid {
 		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 1rem;
+		gap: 0.6rem;
+		margin-bottom: 1.25rem;
 	}
 	.rapid input:first-child {
 		flex: 1;
 	}
 	.error {
 		color: var(--danger);
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 	}
 </style>

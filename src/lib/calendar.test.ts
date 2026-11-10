@@ -14,11 +14,17 @@ describe('calendarRange', () => {
 		expect(dayKey(mon.to!)).toBe('2026-11-08');
 		expect(dayKey(calendarRange('week', today, today, 0).days[0])).toBe('2026-11-01');
 	});
-	it('3 dias e 7 dias a partir de hoje', () => {
+	it('3 dias e 7 dias a partir da âncora', () => {
 		expect(calendarRange('3days', d(2026, 11, 10), today, 1).days).toHaveLength(3);
-		const n7 = calendarRange('next7', d(2030, 1, 1), today, 1);
+		const n7 = calendarRange('next7', today, today, 1);
+		expect(n7.days).toHaveLength(7);
+		expect(n7.days[0]).toBe(today);
+		expect(n7.days[6]).toBe(d(2026, 11, 10));
 		expect(dayKey(n7.from!)).toBe('2026-11-04');
 		expect(dayKey(n7.to!)).toBe('2026-11-10');
+		const next = calendarRange('next7', shiftAnchor('next7', today, 1), today, 1);
+		expect(dayKey(next.from!)).toBe('2026-11-11');
+		expect(dayKey(next.to!)).toBe('2026-11-17');
 	});
 	it('mês cobre semanas completas', () => {
 		const m = calendarRange('month', today, today, 1);
@@ -34,7 +40,7 @@ describe('calendarRange', () => {
 		expect(dayKey(shiftAnchor('3days', today, 1))).toBe('2026-11-07');
 		expect(dayKey(shiftAnchor('week', today, -1))).toBe('2026-10-28');
 		expect(dayKey(shiftAnchor('month', d(2026, 12, 20), 1))).toBe('2027-01-01');
-		expect(shiftAnchor('next7', today, 1)).toBe(today);
+		expect(dayKey(shiftAnchor('next7', today, 1))).toBe('2026-11-11');
 	});
 	it('valida visão e data', () => {
 		expect(parseView('x')).toBe('week');
@@ -54,6 +60,12 @@ describe('buildEvents', () => {
 		const r = buildEvents(items, calendarRange('next7', today, today, 1), today);
 		expect(r.overdue.map((e) => e.item.id)).toEqual([1]);
 		expect([...r.byDay.values()].flat().map((e) => `${e.item.id}${e.kind}`).sort()).toEqual(['2due', '2start']);
+	});
+	it('mostra eventos da faixa anterior de 7 dias nas datas correspondentes', () => {
+		const anchor = shiftAnchor('next7', today, -1);
+		const r = buildEvents(items, calendarRange('next7', anchor, today, 1), today);
+		expect(r.overdue).toHaveLength(0);
+		expect(r.byDay.get(d(2026, 11, 1))?.map((e) => e.item.id)).toEqual([1]);
 	});
 	it('na grade, mostra só o que cai no intervalo', () => {
 		const r = buildEvents(items, calendarRange('3days', today, today, 1), today);

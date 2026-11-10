@@ -72,8 +72,8 @@ export function calendarRange(view: CalView, anchor: number, today: number, week
 			return { ...base, from: days[0], to: days[6], days };
 		}
 		case 'next7': {
-			const days = range(today, 7);
-			return { ...base, anchor: today, from: days[0], to: days[6], days };
+			const days = range(anchor, 7);
+			return { ...base, from: days[0], to: days[6], days };
 		}
 		case 'gantt': {
 			const d = new Date(anchor);
@@ -94,10 +94,10 @@ export function calendarRange(view: CalView, anchor: number, today: number, week
 	}
 }
 
-// Passo da navegação: 3 dias, 1 semana ou 1 mês. As demais visões não navegam.
+// Passo da navegação: 3 dias, 1 semana ou 1 mês. Agenda não navega.
 export function shiftAnchor(view: CalView, anchor: number, dir: -1 | 1): number {
 	if (view === '3days') return anchor + dir * 3 * DAY;
-	if (view === 'week') return anchor + dir * 7 * DAY;
+	if (view === 'week' || view === 'next7') return anchor + dir * 7 * DAY;
 	if (view === 'month' || view === 'gantt') {
 		const d = new Date(anchor);
 		return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + dir, 1);
@@ -110,7 +110,7 @@ export type CalEvent<T extends CalItem> = { item: T; date: number; kind: 'due' |
 
 /**
  * Transforma itens em eventos (um por data: prazo e/ou início) dentro do intervalo.
- * Nas visões Prazos e 7 dias, prazos anteriores a hoje entram em `overdue`.
+ * Na Agenda e na faixa atual de 7 dias, prazos anteriores a hoje entram em `overdue`.
  */
 export function buildEvents<T extends CalItem>(
 	items: T[],
@@ -120,7 +120,7 @@ export function buildEvents<T extends CalItem>(
 ): { byDay: Map<number, CalEvent<T>[]>; overdue: CalEvent<T>[] } {
 	const byDay = new Map<number, CalEvent<T>[]>();
 	const overdue: CalEvent<T>[] = [];
-	const wantsOverdue = r.view === 'deadlines' || r.view === 'next7';
+	const wantsOverdue = r.view === 'deadlines' || (r.view === 'next7' && r.anchor === today);
 	const inRange = (d: number) => (r.from == null || d >= r.from) && (r.to == null || d <= r.to);
 	const push = (item: T, date: number, kind: 'due' | 'start') => {
 		if (kind === 'due' && date < today && wantsOverdue) return void overdue.push({ item, date, kind });

@@ -10,7 +10,7 @@
 <svelte:head><title>{t('Busca')} · GTDone</title></svelte:head>
 
 <h1>{t('Busca')}</h1>
-<p class="muted">{data.q ? t('Resultados para “{q}”', { q: data.q }) : t('Digite algo na busca.')}</p>
+<p class="subtitle">{data.q ? t('Resultados para “{q}”', { q: data.q }) : t('Digite algo na busca.')}</p>
 
 <ItemList
 	items={data.items}
@@ -21,12 +21,3 @@
 	tags={data.tags}
 	emptyText={t('Nada encontrado.')}
 />
-
-<style>
-	h1 {
-		margin: 0;
-	}
-	.muted {
-		color: var(--muted);
-	}
-</style>

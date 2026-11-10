@@ -64,7 +64,7 @@
 			id: 'sidebar',
 			label: 'Barra lateral',
 			fields: [
-				{ key: 'counts', label: 'Contadores', hint: 'Padrão mostra só o que pede atenção (Entrada, Aguardando, Foco).', options: [['attention', 'Padrão'], ['all', 'Mostrar todos']] },
+				{ key: 'counts', label: 'Contadores', hint: 'Padrão mostra Entrada, Aguardando, Foco e itens vencidos em Projetos.', options: [['attention', 'Padrão'], ['all', 'Mostrar todos']] },
 				{ key: 'focusPosition', label: 'Posição do Foco', options: [['top', 'Topo'], ['bottom', 'Abaixo das listas']] },
 				{ key: 'reference', label: 'Referência', options: [['show', 'Mostrar'], ['hide', 'Ocultar']] },
 				{ key: 'later', label: 'Depois', options: [['on', 'Ativar'], ['off', 'Desativar']] },
@@ -229,12 +229,9 @@
 </div>
 
 <style>
-	h1 {
-		margin-top: 0;
-	}
 	.layout {
 		display: flex;
-		gap: 1.5rem;
+		gap: 1.75rem;
 		align-items: flex-start;
 	}
 	nav {
@@ -248,7 +245,7 @@
 		background: none;
 		border: none;
 		color: inherit;
-		padding: 0.45rem 0.75rem;
+		padding: 0.5rem 0.75rem;
 		border-radius: 0.4rem;
 		cursor: pointer;
 	}
@@ -263,7 +260,7 @@
 	section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.9rem;
+		gap: 1rem;
 	}
 	section[hidden] {
 		display: none;
@@ -271,12 +268,12 @@
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3rem;
+		gap: 0.4rem;
 	}
 	small,
 	.muted {
 		color: var(--muted);
-		font-size: 0.8rem;
+		font-size: 0.85rem;
 	}
 	.accents {
 		border: none;

@@ -154,16 +154,12 @@
 
 <style>
 	.actions-badge {
-		font-size: 0.75rem;
-		padding: 0.05rem 0.4rem;
+		font-size: 0.8rem;
+		padding: 0.1rem 0.45rem;
 		border-radius: 4px;
 		background: var(--surface-2);
 		color: var(--muted);
 		white-space: nowrap;
-	}
-	h1 {
-		margin: 0;
-		font-size: 1.5rem;
 	}
 	.subtitle {
 		color: var(--muted);
@@ -172,16 +168,16 @@
 	.grouping {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.2rem;
-		margin: 0.75rem 0;
+		gap: 0.35rem;
+		margin: 0.9rem 0 1rem;
 	}
 	.grouping a {
-		padding: 0.3rem 0.7rem;
+		padding: 0.4rem 0.8rem;
 		border: 1px solid var(--border);
 		border-radius: 999px;
 		color: var(--text);
 		text-decoration: none;
-		font-size: 0.9rem;
+		font-size: 0.92rem;
 	}
 	.grouping a.on {
 		background: var(--accent);
@@ -198,19 +194,22 @@
 		color: var(--danger);
 	}
 	.group {
-		font-size: 0.8rem;
+		font-size: 0.85rem;
+		line-height: 1.35;
 		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		color: var(--muted);
+		margin: 1.5rem 0 0.5rem;
 	}
 	.projects {
 		list-style: none;
 		padding: 0;
 	}
 	.projects li {
-		padding: 0.4rem 0;
+		padding: 0.5rem 0;
 		border-bottom: 1px solid var(--border);
 		display: flex;
-		gap: 0.6rem;
+		gap: 0.75rem;
 		align-items: center;
 	}
 </style>

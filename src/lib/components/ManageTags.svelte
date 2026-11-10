@@ -198,7 +198,7 @@
 		background: var(--surface-2);
 	}
 	.cap {
-		font-size: 0.72rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 		padding: 0.35rem 0.6rem 0.15rem;
 	}

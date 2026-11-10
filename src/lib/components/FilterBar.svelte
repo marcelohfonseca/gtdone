@@ -115,8 +115,8 @@
 
 <style>
 	.filters {
-		margin: 0.5rem 0;
-		font-size: 0.85rem;
+		margin: 0.75rem 0;
+		font-size: 0.9rem;
 	}
 	summary {
 		cursor: pointer;
@@ -125,33 +125,33 @@
 	.row {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-		gap: 0.5rem;
-		margin-top: 0.5rem;
+		gap: 0.65rem;
+		margin-top: 0.65rem;
 	}
 	label {
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
-		font-size: 0.75rem;
+		gap: 0.3rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem;
-		margin-bottom: 0.75rem;
+		gap: 0.5rem;
+		margin-bottom: 0.9rem;
 	}
 	.chip {
 		background: var(--accent);
 		color: #fff;
 		border: none;
 		border-radius: 1rem;
-		padding: 0.15rem 0.7rem;
-		font-size: 0.75rem;
+		padding: 0.2rem 0.75rem;
+		font-size: 0.8rem;
 		cursor: pointer;
 	}
 	.clear {
-		font-size: 0.75rem;
-		padding: 0.1rem 0.6rem;
+		font-size: 0.8rem;
+		padding: 0.15rem 0.65rem;
 	}
 </style>

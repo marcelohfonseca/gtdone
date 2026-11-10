@@ -159,12 +159,12 @@
 		color: var(--tint);
 	}
 	.startdate {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		background: color-mix(in srgb, var(--accent) 18%, transparent);
 		color: var(--accent);
 		border-radius: 4px;
-		padding: 0.05rem 0.4rem;
-		margin-right: 0.3rem;
+		padding: 0.08rem 0.45rem;
+		margin-right: 0.35rem;
 		white-space: nowrap;
 	}
 	.row {
@@ -187,7 +187,7 @@
 		cursor: grab;
 		color: var(--muted);
 		user-select: none;
-		font-size: 0.8rem;
+		font-size: 0.85rem;
 	}
 	.title {
 		flex: 1;
@@ -200,18 +200,18 @@
 		cursor: pointer;
 	}
 	.chip {
-		font-size: 0.75rem;
-		padding: 0.1rem 0.5rem;
+		font-size: 0.8rem;
+		padding: 0.15rem 0.55rem;
 		border-radius: 1rem;
 		background: var(--surface-2);
 		color: var(--muted);
 		text-decoration: none;
 	}
 	.small {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 	}
 	.due {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.due.late {
@@ -260,7 +260,7 @@
 	}
 	.error {
 		color: var(--danger);
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		margin: 0.2rem 0;
 	}
 </style>

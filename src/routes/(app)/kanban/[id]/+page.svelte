@@ -198,9 +198,9 @@
 	label {
 		display: flex;
 		flex-direction: column;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
-		gap: 0.2rem;
+		gap: 0.3rem;
 	}
 	.board {
 		display: flex;
@@ -241,7 +241,7 @@
 		color: var(--muted);
 	}
 	.card select {
-		font-size: 0.75rem;
+		font-size: 0.85rem;
 	}
 	.meta {
 		display: flex;
@@ -249,17 +249,17 @@
 		flex-wrap: wrap;
 	}
 	.chip {
-		font-size: 0.7rem;
+		font-size: 0.8rem;
 		background: var(--surface-2);
 		border-radius: 999px;
-		padding: 0 0.45rem;
+		padding: 0.1rem 0.5rem;
 		color: var(--muted);
 	}
 	.muted {
 		color: var(--muted);
 	}
 	.small {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 	}
 	.error {
 		color: var(--danger);

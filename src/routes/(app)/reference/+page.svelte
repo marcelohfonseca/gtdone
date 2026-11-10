@@ -20,7 +20,7 @@
 <svelte:head><title>{t('Referência')} · GTDone</title></svelte:head>
 
 <h1>📎 {t('Referência')}</h1>
-<p class="muted">{t('Informações para consultar, sem ação associada. Use “Converter em ação” no menu do item.')}</p>
+<p class="subtitle">{t('Informações para consultar, sem ação associada. Use “Converter em ação” no menu do item.')}</p>
 
 <form class="bar" onsubmit={add}>
 	<input bind:value={title} placeholder={t('Nova referência…')} aria-label={t('Nova referência')} />
@@ -43,17 +43,10 @@
 />
 
 <style>
-	h1 {
-		margin: 0;
-	}
-	.muted {
-		color: var(--muted);
-		font-size: 0.9rem;
-	}
 	.bar {
 		display: flex;
-		gap: 0.5rem;
-		margin: 0.5rem 0;
+		gap: 0.6rem;
+		margin: 0.75rem 0;
 	}
 	.bar input {
 		flex: 1;

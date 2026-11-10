@@ -24,7 +24,7 @@
 <svelte:head><title>{t('Projetos')} · GTDone</title></svelte:head>
 
 <h1>{t('Projetos')}</h1>
-<p class="muted">{t('Resultados que exigem mais de uma ação. Projetos ativos sem próxima ação ficam destacados.')}</p>
+<p class="subtitle">{t('Resultados que exigem mais de uma ação. Projetos ativos sem próxima ação ficam destacados.')}</p>
 
 <form class="add" onsubmit={create}>
 	<input bind:value={name} placeholder={t('Novo projeto… (Enter para criar)')} aria-label={t('Novo projeto')} required />
@@ -50,18 +50,12 @@
 {/each}
 
 <style>
-	h1 {
-		margin: 0;
-	}
-	h3 {
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		color: var(--muted);
-		margin: 1.25rem 0 0.25rem;
-	}
 	.muted {
 		color: var(--muted);
 		font-size: 0.9rem;
+	}
+	.subtitle {
+		color: var(--muted);
 	}
 	.add input {
 		width: 100%;
@@ -74,17 +68,18 @@
 	}
 	li {
 		display: flex;
-		gap: 0.6rem;
+		flex-wrap: wrap;
+		gap: 0.75rem;
 		align-items: center;
-		padding: 0.45rem 0;
+		padding: 0.5rem 0;
 		border-bottom: 1px solid var(--border);
 	}
 	li .muted {
 		margin-left: auto;
 	}
 	.chip {
-		font-size: 0.7rem;
-		padding: 0.1rem 0.5rem;
+		font-size: 0.8rem;
+		padding: 0.15rem 0.55rem;
 		border-radius: 1rem;
 		background: var(--surface-2);
 		color: var(--muted);

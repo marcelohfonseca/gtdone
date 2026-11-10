@@ -24,6 +24,9 @@
 	let settingsMenu = $state(false);
 	let manageTags = $state(false);
 	let sidebarOpen = $state(false);
+	let projectsCollapsed = $state(false);
+	let goalsCollapsed = $state(false);
+	let tagsCollapsed = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
 	let scheduleDialog: HTMLDialogElement | undefined = $state();
 	let scheduleDateInput: HTMLInputElement | undefined = $state();
@@ -75,6 +78,7 @@
 			(l) => !((l === 'later' && data.prefs.later === 'off') || (l === 'waiting' && data.prefs.waiting === 'off'))
 		)
 	);
+	const sidebarLists = $derived(GROUP_A.filter((list) => list !== 'inbox'));
 	let showInactive = $state(false);
 	$effect(() => {
 		showInactive = localStorage.getItem('gtdone.showInactive') === '1';
@@ -82,6 +86,23 @@
 	function toggleInactive() {
 		showInactive = !showInactive;
 		localStorage.setItem('gtdone.showInactive', showInactive ? '1' : '0');
+	}
+	$effect(() => {
+		projectsCollapsed = localStorage.getItem('gtdone.projectsCollapsed') === '1';
+		goalsCollapsed = localStorage.getItem('gtdone.goalsCollapsed') === '1';
+		tagsCollapsed = localStorage.getItem('gtdone.tagsCollapsed') === '1';
+	});
+	function toggleProjects() {
+		projectsCollapsed = !projectsCollapsed;
+		localStorage.setItem('gtdone.projectsCollapsed', projectsCollapsed ? '1' : '0');
+	}
+	function toggleGoals() {
+		goalsCollapsed = !goalsCollapsed;
+		localStorage.setItem('gtdone.goalsCollapsed', goalsCollapsed ? '1' : '0');
+	}
+	function toggleTags() {
+		tagsCollapsed = !tagsCollapsed;
+		localStorage.setItem('gtdone.tagsCollapsed', tagsCollapsed ? '1' : '0');
 	}
 	const currentAreaColor = $derived(data.areas.find((a) => a.id === data.filter.area)?.color ?? null);
 	const sidebarProjects = $derived(
@@ -281,107 +302,150 @@
 	<aside class:open={sidebarOpen}>
 		<a class="brand" href="/inbox">GTDone</a>
 		<nav aria-label={t('Listas')} ondragover={dragOver} ondragleave={dragLeave} ondrop={dropOnSidebar}>
-			{#if data.prefs.focusPosition === 'top'}
-				{@render focusLink()}
-				<hr />
-			{/if}
-			{#each GROUP_A as list (list)}
-				<a href={`/${list}${tagQuery}`} class:active={path === `/${list}`} data-drop={`state:${list}`}>
-					<span class="icon">{LIST_META[list].icon}</span>
-					<span class="label">{t(LIST_META[list].label)}</span>
-					{#if badge(list)}<span class="count">{badge(list)}</span>{/if}
+			<div class="sidebar-top">
+				<a href={`/inbox${tagQuery}`} class:active={path === '/inbox'} data-drop="state:inbox">
+					<span class="icon">{LIST_META.inbox.icon}</span>
+					<span class="label">{t(LIST_META.inbox.label)}</span>
+					{#if badge('inbox')}<span class="count">{badge('inbox')}</span>{/if}
 				</a>
-			{/each}
-			{#if data.prefs.focusPosition === 'bottom'}
 				<hr />
-				{@render focusLink()}
-			{/if}
-			{#if data.prefs.calendar === 'on' || data.prefs.kanban === 'on'}
-				<h4>{t('Visualizações')}</h4>
-				{#if data.prefs.calendar === 'on'}
-					<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
-						<span class="icon">🗓️</span>
-						<span class="label">{t('Calendário')}</span>
-					</a>
+				{#if data.prefs.focusPosition === 'top'}
+					{@render focusLink()}
 				{/if}
-				{#if data.prefs.kanban === 'on'}
-					<a href="/kanban" class:active={path === '/kanban'}>
-						<span class="icon">🗂️</span>
-						<span class="label">Kanban</span>
-					</a>
-					{#each data.boards as b (b.id)}
-						<a class="sub" href={`/kanban/${b.id}`} class:active={path === `/kanban/${b.id}`}>
-							<span class="label">{b.name}</span>
-						</a>
-					{/each}
-				{/if}
-			{/if}
-			<h4><a class="h4link" href="/projects">{t('Projetos')}</a></h4>
-			{#each sidebarProjects as p (p.id)}
-				<a href={`/projects/${p.id}`} class:active={path === `/projects/${p.id}`} data-drop={`project:${p.id}`}>
-					<span class="icon">▸</span>
-					<span class="label">{p.name}</span>
-					{#if p.openCount}<span class="count">{p.openCount}</span>{/if}
-				</a>
-			{:else}
-				{#if !data.inactiveProjects.length || !showInactive}<span class="hint">{t('Nenhum projeto ativo')}</span>{/if}
-			{/each}
-			{#if showInactive}
-				{#each data.inactiveProjects as p (p.id)}
-					<a class="inactive" href={`/projects/${p.id}`} class:active={path === `/projects/${p.id}`} data-drop={`project:${p.id}`}>
-						<span class="icon">▹</span>
-						<span class="label">{p.name}</span>
+				{#each sidebarLists as list (list)}
+					<a href={`/${list}${tagQuery}`} class:active={path === `/${list}`} data-drop={`state:${list}`}>
+						<span class="icon">{LIST_META[list].icon}</span>
+						<span class="label">{t(LIST_META[list].label)}</span>
+						{#if badge(list)}<span class="count">{badge(list)}</span>{/if}
 					</a>
 				{/each}
-			{/if}
-			{#if data.inactiveProjects.length}
-				<button class="toggle-inactive" onclick={toggleInactive}>
-					{showInactive ? t('ocultar projetos inativos') : t('mostrar projetos inativos')}
-				</button>
-			{/if}
-			<h4><a class="h4link" href="/goals">{t('Objetivos')}</a></h4>
-			{#each data.sidebarGoals as g (g.id)}
-				<a href={`/goals/${g.id}`} class:active={path === `/goals/${g.id}`}>
-					<span class="icon">🎯</span>
-					<span class="label">{g.name}</span>
-				</a>
-			{:else}
-				<span class="hint">{t('Nenhum objetivo ativo')}</span>
-			{/each}
-			{#if data.tags.length}
-				<h4>{t('Tags')}</h4>
-				<div class="tags">
-					{#each data.tags as t (t.id)}
+				<hr />
+				{#if data.prefs.focusPosition === 'bottom'}
+					{@render focusLink()}
+				{/if}
+			</div>
+			<div class="sidebar-scroll">
+				{#if data.prefs.calendar === 'on' || data.prefs.kanban === 'on'}
+					<h4>{t('Visualizações')}</h4>
+					{#if data.prefs.calendar === 'on'}
+						<a href={`/calendar${tagQuery}`} class:active={path === '/calendar'}>
+							<span class="icon">🗓️</span>
+							<span class="label">{t('Calendário')}</span>
+						</a>
+					{/if}
+					{#if data.prefs.kanban === 'on'}
+						<a href="/kanban" class:active={path === '/kanban' || path.startsWith('/kanban/')}>
+							<span class="icon">🗂️</span>
+							<span class="label">Kanban</span>
+						</a>
+					{/if}
+				{/if}
+				<h4 class="sidebar-section">
+					<a class="h4link" href="/projects">{t('Projetos')}</a>
+					<button
+						type="button"
+						class="section-toggle"
+						aria-label={`${t('Projetos')}: ${t(projectsCollapsed ? 'Mostrar' : 'Ocultar')}`}
+						aria-expanded={!projectsCollapsed}
+						onclick={toggleProjects}>{projectsCollapsed ? '▸' : '▾'}</button>
+				</h4>
+				{#if !projectsCollapsed}
+					{#each sidebarProjects as p (p.id)}
+						{@const projectCount = data.prefs.counts === 'all' ? p.openCount : p.overdueCount}
 						<a
-							class="tag"
-							class:tinted={t.color}
-							style:--tint={t.color}
-							class:active={data.filter.tagId === t.id}
-							href={tagHref(t.id)}>#{t.name}</a
+							href={`/projects/${p.id}`}
+							class:active={path === `/projects/${p.id}`}
+							data-drop={`project:${p.id}`}
+							aria-label={p.stalled ? `${p.name}, ${t('sem próxima ação')}` : p.name}
+							title={p.stalled ? t('sem próxima ação') : undefined}
 						>
+							<span class="icon">▸</span>
+							<span class="label">{p.name}</span>
+							{#if p.stalled}<span class="stalled-indicator" aria-hidden="true"></span>{/if}
+							{#if projectCount}<span class="count">{projectCount}</span>{/if}
+						</a>
+					{:else}
+						{#if !data.inactiveProjects.length || !showInactive}<span class="hint">{t('Nenhum projeto ativo')}</span>{/if}
 					{/each}
-				</div>
-			{/if}
-			<div class="spacer"></div>
-			<hr />
-			{#if data.prefs.reference === 'show'}
-				<a href="/reference" class:active={path === '/reference'}>
-				<span class="icon">📎</span>
-				<span class="label">{t('Referência')}</span>
-			</a>
-			{/if}
-			<a href="/review" class:active={path === '/review'}>
-				<span class="icon">🔁</span>
-				<span class="label">{t('Revisão semanal')}</span>
-			</a>
-			<a href="/logbook" class:active={path === '/logbook'} data-drop="completed">
-				<span class="icon">{LIST_META.logbook.icon}</span>
-				<span class="label">{t(LIST_META.logbook.label)}</span>
-			</a>
-			<a href="/trash" class:active={path === '/trash'} data-drop="trash">
-				<span class="icon">{LIST_META.trash.icon}</span>
-				<span class="label">{t(LIST_META.trash.label)}</span>
-			</a>
+					{#if showInactive}
+						{#each data.inactiveProjects as p (p.id)}
+							<a class="inactive" href={`/projects/${p.id}`} class:active={path === `/projects/${p.id}`} data-drop={`project:${p.id}`}>
+								<span class="icon">▹</span>
+								<span class="label">{p.name}</span>
+							</a>
+						{/each}
+					{/if}
+					{#if data.inactiveProjects.length}
+						<button class="toggle-inactive" onclick={toggleInactive}>
+							{showInactive ? t('ocultar projetos inativos') : t('mostrar projetos inativos')}
+						</button>
+					{/if}
+				{/if}
+				<h4 class="sidebar-section">
+					<a class="h4link" href="/goals">{t('Objetivos')}</a>
+					<button
+						type="button"
+						class="section-toggle"
+						aria-label={`${t('Objetivos')}: ${t(goalsCollapsed ? 'Mostrar' : 'Ocultar')}`}
+						aria-expanded={!goalsCollapsed}
+						onclick={toggleGoals}>{goalsCollapsed ? '▸' : '▾'}</button>
+				</h4>
+				{#if !goalsCollapsed}
+					{#each data.sidebarGoals as g (g.id)}
+						<a href={`/goals/${g.id}`} class:active={path === `/goals/${g.id}`}>
+							<span class="icon">🎯</span>
+							<span class="label">{g.name}</span>
+						</a>
+					{:else}
+						<span class="hint">{t('Nenhum objetivo ativo')}</span>
+					{/each}
+				{/if}
+				{#if data.tags.length}
+					<h4 class="sidebar-section">
+						<span>{t('Tags')}</span>
+						<button
+							type="button"
+							class="section-toggle"
+							aria-label={`${t('Tags')}: ${t(tagsCollapsed ? 'Mostrar' : 'Ocultar')}`}
+							aria-expanded={!tagsCollapsed}
+							onclick={toggleTags}>{tagsCollapsed ? '▸' : '▾'}</button>
+					</h4>
+					{#if !tagsCollapsed}
+						<div class="tags">
+							{#each data.tags as t (t.id)}
+								<a
+									class="tag"
+									class:tinted={t.color}
+									style:--tint={t.color}
+									class:active={data.filter.tagId === t.id}
+									href={tagHref(t.id)}>#{t.name}</a
+								>
+							{/each}
+						</div>
+					{/if}
+				{/if}
+			</div>
+			<div class="sidebar-bottom">
+				<hr />
+				{#if data.prefs.reference === 'show'}
+					<a href="/reference" class:active={path === '/reference'}>
+						<span class="icon">📎</span>
+						<span class="label">{t('Referência')}</span>
+					</a>
+				{/if}
+				<a href="/review" class:active={path === '/review'}>
+					<span class="icon">🔁</span>
+					<span class="label">{t('Revisão semanal')}</span>
+				</a>
+				<a href="/logbook" class:active={path === '/logbook'} data-drop="completed">
+					<span class="icon">{LIST_META.logbook.icon}</span>
+					<span class="label">{t(LIST_META.logbook.label)}</span>
+				</a>
+				<a href="/trash" class:active={path === '/trash'} data-drop="trash">
+					<span class="icon">{LIST_META.trash.icon}</span>
+					<span class="label">{t(LIST_META.trash.label)}</span>
+				</a>
+			</div>
 		</nav>
 	</aside>
 
@@ -500,9 +564,9 @@
 		--accent-base: #4fb98a;
 		--accent: var(--accent-pick, var(--accent-base));
 		--danger: #ef6b6b;
-		--row-pad: 0.6rem;
-		--row-font: 1rem;
-		--row-gap: 0.5rem;
+		--row-pad: 0.45rem;
+		--row-font: 0.98rem;
+		--row-gap: 0.55rem;
 	}
 	:global(:root[data-theme='light']) {
 		--bg: #f6f7f9;
@@ -536,9 +600,9 @@
 	:global(:root[data-accent='teal']) { --accent-pick: #2a9db0; }
 	:global(:root[data-accent='gray']) { --accent-pick: #6f7785; }
 	:global(:root[data-density='compact']) {
-		--row-pad: 0.1rem;
-		--row-font: 0.85rem;
-		--row-gap: 0.3rem;
+		--row-pad: 0.24rem;
+		--row-font: 0.9rem;
+		--row-gap: 0.4rem;
 	}
 	:global(.row.kbd-selected) {
 		outline: 2px solid var(--accent);
@@ -616,6 +680,7 @@
 		background: var(--bg);
 		color: var(--text);
 		font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+		line-height: 1.5;
 	}
 	:global(input, select, textarea) {
 		background: var(--surface);
@@ -662,30 +727,49 @@
 		position: sticky;
 		top: 0;
 		height: 100vh;
-		overflow-y: auto;
+		overflow: hidden;
 		box-sizing: border-box;
 	}
 	.brand {
+		flex: none;
 		font-weight: 700;
+		font-size: 1.05rem;
+		line-height: 1.4;
 		letter-spacing: 0.15em;
 		text-decoration: none;
 		color: var(--text);
-		padding: 0 0.75rem 1rem;
+		padding: 0 0.7rem 1rem;
 	}
 	nav {
 		display: flex;
 		flex-direction: column;
 		gap: 0.1rem;
 		flex: 1;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.sidebar-top,
+	.sidebar-bottom {
+		flex: none;
+	}
+	.sidebar-scroll {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 	nav a {
 		display: flex;
 		align-items: center;
-		gap: 0.6rem;
-		padding: 0.45rem 0.75rem;
+		gap: 0.55rem;
+		min-height: 2.1rem;
+		box-sizing: border-box;
+		padding: 0.35rem 0.7rem;
 		border-radius: 0.4rem;
 		color: var(--text);
 		text-decoration: none;
+		font-size: 0.94rem;
+		line-height: 1.3;
 	}
 	nav a:hover {
 		background: var(--surface-2);
@@ -708,8 +792,15 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+	.stalled-indicator {
+		width: 0.4rem;
+		height: 0.4rem;
+		flex: none;
+		border-radius: 50%;
+		background: #c08a2b;
+	}
 	.count {
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.count.late {
@@ -719,28 +810,53 @@
 		padding: 0 0.4rem;
 	}
 	h4 {
-		margin: 1rem 0.75rem 0.25rem;
-		font-size: 0.7rem;
+		margin: 0.75rem 0.7rem 0.25rem;
+		font-size: 0.75rem;
+		line-height: 1.3;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.07em;
 		color: var(--muted);
 	}
+	h4.sidebar-section {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.section-toggle {
+		all: unset;
+		display: grid;
+		place-items: center;
+		width: 1.7rem;
+		height: 1.7rem;
+		border-radius: 0.3rem;
+		cursor: pointer;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+	.section-toggle:hover {
+		background: var(--surface-2);
+		color: var(--text);
+	}
+	.section-toggle:focus-visible {
+		outline: 2px solid var(--accent);
+	}
 	.hint {
-		padding: 0.25rem 0.75rem;
-		font-size: 0.8rem;
+		padding: 0.3rem 0.7rem;
+		font-size: 0.82rem;
+		line-height: 1.4;
 		color: var(--muted);
 	}
 	.tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.3rem;
-		padding: 0 0.75rem;
+		gap: 0.4rem;
+		padding: 0 0.7rem;
 	}
 	nav .tag {
-		padding: 0.1rem 0.5rem;
+		padding: 0.15rem 0.55rem;
 		border-radius: 1rem;
 		background: var(--surface-2);
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 	}
 	nav .tag.tinted {
 		background: color-mix(in srgb, var(--tint) 22%, transparent);
@@ -762,21 +878,22 @@
 	.toggle-inactive {
 		all: unset;
 		cursor: pointer;
-		font-size: 0.75rem;
-		padding: 0.2rem 0.75rem;
+		font-size: 0.78rem;
+		padding: 0.3rem 0.7rem;
 		color: var(--muted);
 	}
 	.toggle-inactive:hover {
 		color: var(--text);
 		text-decoration: underline;
 	}
-	nav a.sub {
-		padding-left: 2.3rem;
-		font-size: 0.9em;
-	}
 	nav a.h4link {
 		padding: 0;
+		min-height: 0;
+		flex: 1;
+		gap: 0;
 		color: inherit;
+		font-size: inherit;
+		line-height: inherit;
 		text-transform: inherit;
 		letter-spacing: inherit;
 	}
@@ -787,11 +904,8 @@
 	hr {
 		border: none;
 		border-top: 1px solid var(--border);
-		margin: 0.5rem 0;
+		margin: 0.55rem 0;
 		width: 100%;
-	}
-	.spacer {
-		flex: 1;
 	}
 	.main {
 		flex: 1;
@@ -815,9 +929,26 @@
 		display: none;
 	}
 	main {
-		max-width: 52rem;
-		padding: 1.25rem;
+		max-width: 56rem;
+		padding: 1.5rem;
 		margin: 0 auto;
+	}
+	:global(main > h1) {
+		margin: 0 0 0.45rem;
+		font-size: 1.65rem;
+		line-height: 1.25;
+		letter-spacing: -0.025em;
+	}
+	:global(main > h1 + p) {
+		margin: 0 0 1.25rem;
+		color: var(--muted);
+		font-size: 0.93rem;
+		line-height: 1.5;
+	}
+	:global(main > h3) {
+		margin: 1.5rem 0 0.5rem;
+		font-size: 1rem;
+		line-height: 1.35;
 	}
 	main.wide {
 		max-width: none;
@@ -828,7 +959,7 @@
 	}
 	.filterbar {
 		color: var(--muted);
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 	}
 	.menu-wrap {
 		position: relative;
@@ -849,7 +980,7 @@
 	}
 	.menu-title {
 		padding: 0.35rem 0.9rem;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 		font-style: italic;
 	}
@@ -866,6 +997,7 @@
 		text-align: left;
 		width: 100%;
 		box-sizing: border-box;
+		line-height: 1.4;
 	}
 	.menu button:hover,
 	.menu a:hover {
@@ -873,7 +1005,7 @@
 	}
 	kbd {
 		color: var(--muted);
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 	}
 	@media print {
 		aside,
@@ -905,6 +1037,11 @@
 		}
 		.burger {
 			display: inline-block;
+		}
+	}
+	@media (max-width: 600px) {
+		main {
+			padding: 1rem;
 		}
 	}
 </style>

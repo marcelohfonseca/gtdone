@@ -50,17 +50,9 @@
 </ul>
 
 <style>
-	h1 {
-		margin: 0;
-		font-size: 1.5rem;
-	}
-	.subtitle {
-		margin: 0.2rem 0 1rem;
-		font-size: 0.9rem;
-	}
 	.add {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.6rem;
 		flex-wrap: wrap;
 	}
 	.add input {

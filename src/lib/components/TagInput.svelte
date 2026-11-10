@@ -299,6 +299,6 @@
 	}
 	.hint {
 		color: var(--muted);
-		font-size: 0.72rem;
+		font-size: 0.8rem;
 	}
 </style>

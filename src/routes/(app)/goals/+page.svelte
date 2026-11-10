@@ -23,7 +23,7 @@
 <svelte:head><title>{t('Objetivos')} · GTDone</title></svelte:head>
 
 <h1>🎯 {t('Objetivos')}</h1>
-<p class="muted">{t('Aonde você quer chegar. Vincule ações e projetos a cada objetivo para acompanhar o progresso.')}</p>
+<p class="subtitle">{t('Aonde você quer chegar. Vincule ações e projetos a cada objetivo para acompanhar o progresso.')}</p>
 
 <form class="add" onsubmit={create}>
 	<input bind:value={name} placeholder={t('Novo objetivo… (Enter para criar)')} aria-label={t('Novo objetivo')} required />
@@ -57,16 +57,19 @@
 	ul {
 		list-style: none;
 		padding: 0;
+		margin: 0;
 	}
 	li {
 		display: flex;
-		gap: 0.6rem;
-		padding: 0.4rem 0;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.5rem 0;
 		border-bottom: 1px solid var(--border);
 	}
 	.area {
-		font-size: 0.75rem;
-		padding: 0.05rem 0.5rem;
+		font-size: 0.8rem;
+		padding: 0.1rem 0.55rem;
 		border-radius: 1rem;
 		background: color-mix(in srgb, var(--tint) 22%, transparent);
 		color: var(--tint);

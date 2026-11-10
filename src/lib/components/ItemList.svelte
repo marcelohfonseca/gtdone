@@ -300,16 +300,16 @@
 
 <style>
 	.more {
-		margin: 0.25rem 0 0 1.5rem;
-		font-size: 0.8rem;
+		margin: 0.35rem 0 0 1.5rem;
+		font-size: 0.85rem;
 	}
 	.bulkbar {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: 0.6rem;
 		align-items: center;
-		margin-bottom: 0.5rem;
-		font-size: 0.85rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
 	}
 	.muted {
 		color: var(--muted);
@@ -324,10 +324,11 @@
 		min-width: 0;
 	}
 	.group {
-		margin: 1.25rem 0 0.25rem;
-		font-size: 0.8rem;
+		margin: 1.5rem 0 0.5rem;
+		font-size: 0.85rem;
+		line-height: 1.35;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.055em;
 		color: var(--muted);
 	}
 	.group a {
@@ -336,7 +337,8 @@
 	}
 	.empty {
 		color: var(--muted);
-		padding: 2rem 0;
+		padding: 2.5rem 0;
+		line-height: 1.5;
 		text-align: center;
 	}
 	.error {

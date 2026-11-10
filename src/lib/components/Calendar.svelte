@@ -58,7 +58,7 @@
 	);
 	const events = $derived(buildEvents(items, range, today, mode));
 	const sortedDays = $derived([...events.byDay.keys()].sort((a, b) => a - b));
-	const navigable = $derived(view === '3days' || view === 'week' || view === 'month' || view === 'gantt');
+	const navigable = $derived(view !== 'deadlines');
 
 	const locale = $derived(prefs().lang);
 	const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...o });
@@ -75,7 +75,6 @@
 	const title = $derived.by(() => {
 		if (view === 'month' || view === 'gantt') return cap(monthName.format(range.anchor));
 		if (view === 'deadlines') return t('Agenda');
-		if (view === 'next7') return t('Próximos 7 dias');
 		const [a, b] = [range.days[0], range.days[range.days.length - 1]];
 		return `${dayShort.format(a)} – ${dayShort.format(b)}${year(b) !== year(today) ? ` ${year(b)}` : ''}`;
 	});
@@ -189,7 +188,7 @@
 				<a class="btn ghost" href={todayHref} data-sveltekit-noscroll>{t('Hoje')}</a>
 				<a class="btn ghost" href={nextHref} aria-label={t('Próximo')} data-sveltekit-noscroll data-sveltekit-preload-data="hover">›</a>
 			{/if}
-			<h2>{title}</h2>
+			{#if view !== 'deadlines'}<h2>{title}</h2>{/if}
 		</div>
 	</div>
 
@@ -224,15 +223,14 @@
 				<ItemRow item={ganttItem} {...rowProps} />
 			</section>
 		{/if}
-	{:else if view === 'deadlines' || view === 'next7'}
-		{@const listDays = view === 'next7' ? range.days : sortedDays}
+	{:else if view === 'deadlines'}
 		{#if events.overdue.length}
 			<h3 class="day late">{t('Atrasadas')}</h3>
 			{#each events.overdue as e (`${e.item.id}-o`)}<ItemRow item={e.item} {...rowProps} />{/each}
 		{/if}
-		{#each listDays as d (d)}
+		{#each sortedDays as d (d)}
 			{@const list = events.byDay.get(d) ?? []}
-			{#if list.length || view === 'next7'}
+			{#if list.length}
 				<h3 class="day" class:today={d === today}>
 					{d === today ? `${t('Hoje')} · ` : ''}{dayTitle(d)}
 				</h3>
@@ -250,6 +248,10 @@
 			<p class="muted">{t('Nenhum item com data.')}</p>
 		{/if}
 	{:else}
+		{#if view === 'next7' && events.overdue.length}
+			<h3 class="day late">{t('Atrasadas')}</h3>
+			{#each events.overdue as e (`${e.item.id}-o`)}<ItemRow item={e.item} {...rowProps} />{/each}
+		{/if}
 		<div class="scroll">
 			<div class="grid" class:month={view === 'month'} style:--cols={view === '3days' ? 3 : 7}>
 				{#if view === 'month' || view === 'week'}
@@ -318,7 +320,7 @@
 	}
 	.gh {
 		text-align: center;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 		padding: 0.25rem 0;
 		border-bottom: 1px solid var(--border);
@@ -363,8 +365,16 @@
 		display: flex;
 		align-items: center;
 		gap: 0.3rem;
+		flex: 0 0 18rem;
+		justify-content: flex-end;
 	}
 	.nav h2 {
+		flex: 0 0 9rem;
+		min-width: 0;
+		text-align: right;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		margin: 0 0 0 0.5rem;
 		font-size: 1.05rem;
 	}
@@ -449,7 +459,7 @@
 	.more {
 		all: unset;
 		cursor: pointer;
-		font-size: 0.75rem;
+		font-size: 0.8rem;
 		color: var(--muted);
 	}
 	.detail {

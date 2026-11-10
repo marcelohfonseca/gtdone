@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 					range.to,
 					filter,
 					today,
-					view === 'deadlines' || view === 'next7',
+					view === 'deadlines' || (view === 'next7' && range.anchor === today),
 					1000,
 					mode
 				);
