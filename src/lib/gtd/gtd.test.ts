@@ -172,6 +172,21 @@ describe('engajar', () => {
 });
 
 describe('projetos e encerramento', () => {
+	it('move projeto entre ativo, Depois e Algum dia preservando suas datas', () => {
+		const db = memDb();
+		const p = createProject(db, {
+			name: 'P',
+			startsAt: TODAY + DAY,
+			dueAt: TODAY + 2 * DAY
+		}, TODAY);
+		updateProject(db, p, { state: 'later' }, TODAY);
+		expect(getProject(db, p, TODAY)).toMatchObject({ state: 'later', startsAt: TODAY + DAY, dueAt: TODAY + 2 * DAY });
+		updateProject(db, p, { state: 'someday' }, TODAY);
+		expect(getProject(db, p, TODAY).state).toBe('someday');
+		updateProject(db, p, { state: 'active' }, TODAY);
+		expect(getProject(db, p, TODAY)).toMatchObject({ state: 'active', startsAt: TODAY + DAY, dueAt: TODAY + 2 * DAY });
+	});
+
 	it('conta apenas tarefas abertas e vencidas por projeto', () => {
 		const db = memDb();
 		const p = createProject(db, { name: 'P' }, TODAY);

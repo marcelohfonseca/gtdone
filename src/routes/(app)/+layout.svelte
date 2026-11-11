@@ -205,8 +205,15 @@
 
 	// Arrastar um item da lista para a barra lateral: move de lista, atribui projeto, foca, conclui ou exclui.
 	const DRAG_TYPE = 'application/x-gtdone-item';
+	const PROJECT_DRAG_TYPE = 'application/x-gtdone-project';
+	const PROJECT_DROP_STATES = { next: 'active', later: 'later', someday: 'someday' } as const;
 	let dropOver: HTMLElement | null = null;
 	const dropTarget = (e: DragEvent) => (e.target as HTMLElement).closest<HTMLElement>('[data-drop]');
+	const projectDropState = (drop?: string) => {
+		if (!drop?.startsWith('state:')) return null;
+		const list = drop.slice('state:'.length);
+		return list in PROJECT_DROP_STATES ? PROJECT_DROP_STATES[list as keyof typeof PROJECT_DROP_STATES] : null;
+	};
 
 	function clearOver() {
 		dropOver?.classList.remove('drop-over');
@@ -214,11 +221,13 @@
 	}
 
 	function dragOver(e: DragEvent) {
-		if (!e.dataTransfer?.types.includes(DRAG_TYPE)) return;
+		const types = e.dataTransfer?.types;
+		const projectDrag = types?.includes(PROJECT_DRAG_TYPE) ?? false;
+		if (!types?.includes(DRAG_TYPE) && !projectDrag) return;
 		const el = dropTarget(e);
-		if (!el) return clearOver();
+		if (!el || (projectDrag && !projectDropState(el.dataset.drop))) return clearOver();
 		e.preventDefault();
-		e.dataTransfer.dropEffect = 'move';
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 		if (el !== dropOver) {
 			clearOver();
 			dropOver = el;
@@ -265,10 +274,19 @@
 	}
 
 	async function dropOnSidebar(e: DragEvent) {
-		const id = Number(e.dataTransfer?.getData(DRAG_TYPE));
+		const projectDrag = e.dataTransfer?.types.includes(PROJECT_DRAG_TYPE) ?? false;
+		const id = Number(e.dataTransfer?.getData(projectDrag ? PROJECT_DRAG_TYPE : DRAG_TYPE));
 		const target = dropTarget(e)?.dataset.drop;
 		clearOver();
 		if (!id || !target) return;
+		if (projectDrag) {
+			const state = projectDropState(target);
+			if (!state) return;
+			e.preventDefault();
+			const error = await postAction('moveProject', { id, state });
+			if (error) alert(translateMessage(data.prefs.lang, error));
+			return;
+		}
 		e.preventDefault();
 		const [kind, arg] = target.split(':');
 		if (kind === 'state' && arg === 'scheduled') {

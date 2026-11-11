@@ -86,7 +86,15 @@
 				<!-- svelte-ignore a11y_autofocus -->
 				<input name="name" value={p.name} required autofocus aria-label={t('Nome')} />
 				<input name="desiredOutcome" value={p.desiredOutcome} placeholder={t('Resultado desejado')} />
-				<TagInput bind:value={tagText} areas={data.areas} contacts={data.contacts} tags={data.tags} allowContacts={false} placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')} />
+				<TagInput
+					bind:value={tagText}
+					areas={data.areas}
+					contacts={data.contacts}
+					tags={data.tags}
+					allowContacts={false}
+					removableBadges
+					placeholder={t('Tags (áreas, contatos, contextos) separadas por vírgula')}
+				/>
 				<textarea name="notes" rows="6" placeholder={t('Notas')}>{p.notes}</textarea>
 				{#if error}<p class="error">{t.msg(error)}</p>{/if}
 				<div class="actions">

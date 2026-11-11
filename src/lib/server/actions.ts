@@ -305,6 +305,7 @@ export const appActions = {
 			today
 		);
 	}),
+	moveProject: act((db, fd, _ev, today) => updateProject(db, reqId(fd), { state: fd.get('state') }, today)),
 	createGoal: async (ev: RequestEvent) => {
 		let id: number;
 		try {

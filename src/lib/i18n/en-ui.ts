@@ -41,6 +41,7 @@ export const EN_UI: Record<string, string> = {
 	// ItemRow
 	'Data de início (AAAA-MM-DD):': 'Start date (YYYY-MM-DD):',
 	'Arrastar para reordenar': 'Drag to reorder',
+	'Arraste para mover o projeto': 'Drag to move the project',
 	Referência: 'Reference',
 	'Mostrar mais {n} ação(ões)': 'Show {n} more action(s)',
 	'Mostrar menos': 'Show less',

@@ -7,6 +7,8 @@
 	const t = useT();
 	let name = $state('');
 	let error = $state('');
+	let draggingId = $state<number | null>(null);
+	const PROJECT_DRAG_TYPE = 'application/x-gtdone-project';
 
 	const SECTIONS = [
 		['active', 'Ativos'],
@@ -19,11 +21,17 @@
 		e.preventDefault();
 		error = (await postAction('createProject', { name })) ?? '';
 	}
+
+	function dragProject(e: DragEvent, id: number) {
+		draggingId = id;
+		e.dataTransfer?.setData(PROJECT_DRAG_TYPE, String(id));
+		if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+	}
 </script>
 
 <svelte:head><title>{t('Projetos')} · GTDone</title></svelte:head>
 
-<h1>{t('Projetos')}</h1>
+<h1>📁 {t('Projetos')}</h1>
 <p class="subtitle">{t('Resultados que exigem mais de uma ação. Projetos ativos sem próxima ação ficam destacados.')}</p>
 
 <form class="add" onsubmit={create}>
@@ -36,7 +44,14 @@
 		<h3>{t(label)}</h3>
 		<ul>
 			{#each data[key] as p (p.id)}
-				<li>
+				<li
+					class:dragging={draggingId === p.id}
+					draggable="true"
+					title={t('Arraste para mover o projeto')}
+					ondragstart={(e) => dragProject(e, p.id)}
+					ondragend={() => (draggingId = null)}
+				>
+					<span class="handle" aria-hidden="true">⋮⋮</span>
 					<a href={`/projects/${p.id}`}>{p.name}</a>
 					{#if p.executionMode === 'sequential'}<span class="chip">{t('sequencial')}</span>{/if}
 					{#if p.stalled}<span class="chip warn">{t('sem próxima ação')}</span>{/if}
@@ -73,6 +88,17 @@
 		align-items: center;
 		padding: 0.5rem 0;
 		border-bottom: 1px solid var(--border);
+	}
+	li[draggable='true'] {
+		cursor: grab;
+	}
+	li.dragging {
+		opacity: 0.5;
+	}
+	.handle {
+		color: var(--muted);
+		font-size: 0.85rem;
+		user-select: none;
 	}
 	li .muted {
 		margin-left: auto;
